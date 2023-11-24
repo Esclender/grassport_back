@@ -73,6 +73,7 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
   }
 }
 
+// FUNCTION TO GET ALL LOCATIONS SEARCHED BY ADDRESS
 async function findByAddress ({ address }) {
   const args = {
     params: {
@@ -88,6 +89,7 @@ async function findByAddress ({ address }) {
     const { formatted_address, address_components, geometry } = res
 
     return {
+      leading: 'place',
       street: formatted_address,
       locality: address_components[0].short_name,
       location: geometry.location
