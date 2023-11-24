@@ -46,7 +46,30 @@ async function getNearbyLocationController (req, res) {
   }
 }
 
+async function geocodingByAddress (req, res) {
+  try {
+    const { street } = req.query
+
+    const response = await ubicacionesServices.findByAddress({ address: street })
+
+    return res.json({
+      exitoso: true,
+      response
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   getGeolocationController,
-  getNearbyLocationController
+  getNearbyLocationController,
+  geocodingByAddress
 }

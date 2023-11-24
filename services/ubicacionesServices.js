@@ -18,11 +18,10 @@ async function getGeolocation ({ latitude, longitude }) {
     client.reverseGeocode(args)
       .then(({ data }) => {
         const adrresses = data.results
-        console.log(adrresses)
 
         resolve({
           street: adrresses[1].formatted_address,
-          locality: adrresses[4].formatted_address
+          locality: adrresses[adrresses.length - 2].formatted_address
         })
       }).catch((err) => {
         console.log(err)
@@ -56,10 +55,13 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
       const { geometry, name, vicinity, rating, opening_hours } = location
 
       return {
-        location: geometry.location,
+        location: {
+          latitude: geometry.location.lat,
+          longitude: geometry.location.lng
+        },
         name,
         address: vicinity,
-        rating,
+        rating: Math.round(rating),
         isOpen: opening_hours?.open_now ?? null
       }
     })
@@ -71,7 +73,30 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
   }
 }
 
+async function findByAddress ({ address }) {
+  const args = {
+    params: {
+      key: process.env.GOOGLE_MAPS_API_KEY,
+      address,
+      components: 'country:PE|locality:LIMA'
+    }
+  }
+
+  const response = await client.geocode(args)
+
+  return response.data.results.map((res) => {
+    const { formatted_address, address_components, geometry } = res
+
+    return {
+      street: formatted_address,
+      locality: address_components[0].short_name,
+      location: geometry.location
+    }
+  })
+}
+
 module.exports = {
   getGeolocation,
-  getNearbyLocations
+  getNearbyLocations,
+  findByAddress
 }
