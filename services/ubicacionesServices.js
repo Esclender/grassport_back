@@ -1,7 +1,6 @@
-// const userSchema = require('../models/user')
+const History = require('../models/userHistory')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const client = new Client({})
-// const { geocodeGoogle } = require('../clients/googleInstance')
 
 async function getGeolocation ({ latitude, longitude }) {
   return new Promise((resolve, reject) => {
@@ -19,7 +18,13 @@ async function getGeolocation ({ latitude, longitude }) {
       .then(({ data }) => {
         const adrresses = data.results
 
+        console.log(adrresses)
+
         resolve({
+          location: {
+            lat: latitude,
+            lng: longitude
+          },
           street: adrresses[1].formatted_address,
           locality: adrresses[adrresses.length - 2].formatted_address
         })
@@ -54,6 +59,8 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
     const nearbyLocations = response.data.results.map((location) => {
       const { geometry, name, vicinity, rating, opening_hours } = location
 
+      console.log(location)
+
       return {
         location: {
           latitude: geometry.location.lat,
@@ -74,7 +81,7 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
 }
 
 // FUNCTION TO GET ALL LOCATIONS SEARCHED BY ADDRESS
-async function findByAddress ({ address }) {
+async function findByAddress ({ address, userToken }) {
   const args = {
     params: {
       key: process.env.GOOGLE_MAPS_API_KEY,
@@ -84,21 +91,35 @@ async function findByAddress ({ address }) {
   }
 
   const response = await client.geocode(args)
-
-  return response.data.results.map((res) => {
+  const locationsArray = response.data.results.map((res) => {
     const { formatted_address, address_components, geometry } = res
 
     return {
       leading: 'place',
       street: formatted_address,
       locality: address_components[0].short_name,
-      location: geometry.location
+      location: geometry.location,
+      emailUsuario: userToken?.email ?? null
     }
   })
+
+  return locationsArray
+}
+
+async function saveHistoryLocation ({ data, userToken }) {
+  const mappedData = new History({
+    ...data,
+    leading: 'place',
+    emailUsuario: userToken?.email ?? null,
+    fecha_busqueda: Date.now()
+  })
+
+  await mappedData.save()
 }
 
 module.exports = {
   getGeolocation,
   getNearbyLocations,
-  findByAddress
+  findByAddress,
+  saveHistoryLocation
 }

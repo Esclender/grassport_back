@@ -3,14 +3,18 @@ const jwt = require('jsonwebtoken')
 async function isAuthenticated (req, res, next) {
   try {
     let token = req.header('Authorization')
-    if (!token) {
-      return res
-        .status(404)
-        .json({ exitoso: false, mensaje: 'Token no encontrado' })
+    if (token) {
+      token = token.split(' ')[1]
+      const decoded = jwt.verify(token, process.env.ACCESS_SECRET)
+      req.jwt = {
+        ...decoded,
+        isLogged: true
+      }
+    } else {
+      req.jwt = {
+        isLogged: false
+      }
     }
-    token = token.split(' ')[1]
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET)
-    req.jwt = decoded
 
     next()
   } catch (error) {

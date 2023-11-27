@@ -2,12 +2,14 @@ const express = require('express')
 const router = express.Router()
 
 const ubicacionesController = require('../controllers/ubicacionesController')
-const updateLocationMiddleware = require('../middlewares/updateLastLocation')
-const isAuthenticatedMiddleware = require('../middlewares/isLoggedUser')
+const isAuthenticatedMiddleware = require('../middlewares/isAuth')
+const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 
 // DON'T REQUIRE AUTH
 router.get('/geocoding', ubicacionesController.getGeolocationController)
+router.get('/geocoding/address', [isAuthenticatedMiddleware], ubicacionesController.geocodingByAddress)
 router.get('/geocoding/nearbyLocations', ubicacionesController.getNearbyLocationController)
-router.get('/geocoding/address', ubicacionesController.geocodingByAddress)
+
+router.post('/user-history', [isAuthenticatedMiddleware, mustBeAuthenticated], ubicacionesController.saveHistory)
 
 module.exports = router

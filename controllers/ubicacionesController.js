@@ -50,7 +50,7 @@ async function geocodingByAddress (req, res) {
   try {
     const { street } = req.query
 
-    const response = await ubicacionesServices.findByAddress({ address: street })
+    const response = await ubicacionesServices.findByAddress({ address: street, userToken: req.jwt })
 
     return res.json({
       exitoso: true,
@@ -68,8 +68,30 @@ async function geocodingByAddress (req, res) {
   }
 }
 
+async function saveHistory (req, res) {
+  try {
+    const { data } = req.body
+
+    await ubicacionesServices.saveHistoryLocation({ data, userToken: req.jwt })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   getGeolocationController,
   getNearbyLocationController,
-  geocodingByAddress
+  geocodingByAddress,
+  saveHistory
 }

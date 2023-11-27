@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-const isCreated = require('../middlewares/isEmailUnique')
-const isAuth = require('../middlewares/isLoggedUser')
+const isCreated = require('../middlewares/isEmailCreated')
+const isAuth = require('../middlewares/isAuth')
 
 // const ubicacionesController = require('../controllers/ubicacionesController')
 const usuarioControllers = require('../controllers/usersController')

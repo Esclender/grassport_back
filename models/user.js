@@ -2,12 +2,8 @@
 const db = require('../helpers/db')
 
 const userSchema = new db.Schema({
-  primer_nombre: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  ultima_ubicacion: {
-    latitude: { type: Number },
-    longitude: { type: Number }
-  }
+  nombre: { type: String, required: true },
+  email: { type: String, required: true, unique: true }
 })
 
 userSchema.methods = {
