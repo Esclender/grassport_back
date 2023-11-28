@@ -1,4 +1,5 @@
 const userSchema = require('../models/user')
+const historySchema = require('../models/userHistory')
 const { generateToken } = require('../utils/jwt')
 
 async function saveUserData ({ body, isCreated }) {
@@ -38,7 +39,33 @@ async function userData ({ isCreated }) {
   return 'DATOS DEL USUARIO'
 }
 
+async function getUserHistory ({ isCreated }) {
+  const { email } = isCreated
+
+  const historial = await historySchema.aggregate(
+    [
+      {
+        $match:
+          {
+            emailUsuario: email
+          }
+      },
+      {
+        $project: {
+          _id: 0,
+          __v: 0
+        }
+      }
+    ]
+  )
+
+  return {
+    historial
+  }
+}
+
 module.exports = {
   saveUserData,
-  userData
+  userData,
+  getUserHistory
 }

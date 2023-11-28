@@ -11,7 +11,7 @@ async function saveUserController (req, res) {
     })
   } catch (error) {
     const { message, cause } = error
-	console.log(message)
+    console.log(message)
     return res
       .status(cause?.status ?? 401)
       .json({
@@ -42,7 +42,29 @@ async function userDataController (req, res) {
   }
 }
 
+async function userHistoryController (req, res) {
+  try {
+    const { jwt } = req
+    const data = await usersServices.getUserHistory({ isCreated: jwt })
+
+    return res.json({
+      exitoso: true,
+      ...data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   saveUserController,
-  userDataController
+  userDataController,
+  userHistoryController
 }
