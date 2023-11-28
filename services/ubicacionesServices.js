@@ -59,8 +59,6 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
     const nearbyLocations = response.data.results.map((location) => {
       const { geometry, name, vicinity, rating, opening_hours } = location
 
-      console.log(location)
-
       return {
         location: {
           latitude: geometry.location.lat,
