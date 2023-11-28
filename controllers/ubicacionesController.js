@@ -71,7 +71,6 @@ async function geocodingByAddress (req, res) {
 async function saveHistory (req, res) {
   try {
     const { data } = req.body
-	console.log(data)
     await ubicacionesServices.saveHistoryLocation({ data, userToken: req.jwt })
 
     return res.json({

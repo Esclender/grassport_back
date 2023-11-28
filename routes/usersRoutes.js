@@ -12,6 +12,6 @@ router.post('/', [isCreated], usuarioControllers.saveUserController)
 
 // REQ AUTH
 router.get('/mis-datos', [isAuth, mustBeAuthenticated], usuarioControllers.userDataController)
-router.get('/mis-datos/historial', [isAuth, mustBeAuthenticated], usuarioControllers.userHistoryController)
+router.get('/mis-datos/historial', [isAuth], usuarioControllers.userHistoryController)
 
 module.exports = router

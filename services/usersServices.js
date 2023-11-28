@@ -40,27 +40,32 @@ async function userData ({ isCreated }) {
 }
 
 async function getUserHistory ({ isCreated }) {
-  const { email } = isCreated
-
-  const historial = await historySchema.aggregate(
-    [
-      {
-        $match:
-          {
-            emailUsuario: email
+  if (isCreated.loggedUser) {
+    const { email } = isCreated
+    const historial = await historySchema.aggregate(
+      [
+        {
+          $match:
+            {
+              emailUsuario: email
+            }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
           }
-      },
-      {
-        $project: {
-          _id: 0,
-          __v: 0
         }
-      }
-    ]
-  )
+      ]
+    )
 
-  return {
-    historial
+    return {
+      historial
+    }
+  } else {
+    return {
+      historial: []
+    }
   }
 }
 
