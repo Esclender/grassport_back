@@ -105,14 +105,18 @@ async function findByAddress ({ address, userToken }) {
 }
 
 async function saveHistoryLocation ({ data, userToken }) {
-  const mappedData = new History({
-    ...data,
-    leading: 'history',
-    emailUsuario: userToken?.email ?? null,
-    fecha_busqueda: Date.now()
-  })
+  const isSaved = await History.findOne({ street: data.street }).exec()
 
-  await mappedData.save()
+  if (!isSaved) {
+    const mappedData = new History({
+      ...data,
+      leading: 'history',
+      emailUsuario: userToken?.email ?? null,
+      fecha_busqueda: Date.now()
+    })
+
+    await mappedData.save()
+  }
 }
 
 module.exports = {
