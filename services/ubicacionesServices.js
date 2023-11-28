@@ -109,7 +109,7 @@ async function findByAddress ({ address, userToken }) {
 async function saveHistoryLocation ({ data, userToken }) {
   const mappedData = new History({
     ...data,
-    leading: 'place',
+    leading: 'history',
     emailUsuario: userToken?.email ?? null,
     fecha_busqueda: Date.now()
   })
