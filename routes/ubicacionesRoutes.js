@@ -7,7 +7,7 @@ const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 
 // DON'T REQUIRE AUTH
 router.get('/geocoding', ubicacionesController.getGeolocationController)
-router.get('/geocoding/address', [isAuthenticatedMiddleware], ubicacionesController.geocodingByAddress)
+router.get('/geocoding/address', ubicacionesController.geocodingByAddress)
 router.get('/geocoding/nearbyLocations', ubicacionesController.getNearbyLocationController)
 
 router.post('/user-history', [isAuthenticatedMiddleware, mustBeAuthenticated], ubicacionesController.saveHistory)

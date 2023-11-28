@@ -11,7 +11,7 @@ async function saveUserController (req, res) {
     })
   } catch (error) {
     const { message, cause } = error
-
+	console.log(message)
     return res
       .status(cause?.status ?? 401)
       .json({
@@ -32,7 +32,7 @@ async function userDataController (req, res) {
     })
   } catch (error) {
     const { message, cause } = error
-
+    console.log(message)
     return res
       .status(cause?.status ?? 401)
       .json({
