@@ -40,33 +40,35 @@ async function userData ({ isCreated }) {
 }
 
 async function getUserHistory ({ isCreated }) {
-  if (isCreated.loggedUser) {
-    const { email } = isCreated
-    const historial = await historySchema.aggregate(
-      [
-        {
-          $match:
-            {
-              emailUsuario: email
+  return new Promise((resolve, reject) => {
+    if (isCreated.isLogged) {
+      const { email } = isCreated
+      historySchema.aggregate(
+        [
+          {
+            $match:
+              {
+                emailUsuario: email
+              }
+          },
+          {
+            $project: {
+              _id: 0,
+              __v: 0
             }
-        },
-        {
-          $project: {
-            _id: 0,
-            __v: 0
           }
-        }
-      ]
-    )
-
-    return {
-      historial
+        ]
+      ).then(
+        (data) => resolve({
+          historial: data
+        })
+      )
+    } else {
+      resolve({
+        historial: []
+      })
     }
-  } else {
-    return {
-      historial: []
-    }
-  }
+  })
 }
 
 module.exports = {
