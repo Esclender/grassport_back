@@ -1,3 +1,4 @@
+const { default: axios } = require('axios')
 const History = require('../models/userHistory')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const client = new Client({})
@@ -104,6 +105,24 @@ async function findByAddress ({ address, userToken }) {
   return locationsArray
 }
 
+async function searchCanchasLocations ({ nombre, userToken }) {
+  const mapsPlacesEndpoint = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nombre}+in+Lima,Peru&key=${process.env.GOOGLE_MAPS_API_KEY}`
+  const responseApi = await axios.get(mapsPlacesEndpoint)
+
+  const locationsArray = responseApi.data.results.map((res) => {
+    const { formatted_address, name, geometry } = res
+
+    return {
+      leading: 'place',
+      street: formatted_address,
+      nombre_cancha: name,
+      location: geometry.location,
+      emailUsuario: userToken?.email ?? null
+    }
+  })
+  return locationsArray
+}
+
 async function saveHistoryLocation ({ data, userToken }) {
   const isSaved = await History.findOne({ street: data.street }).exec()
 
@@ -123,5 +142,6 @@ module.exports = {
   getGeolocation,
   getNearbyLocations,
   findByAddress,
-  saveHistoryLocation
+  saveHistoryLocation,
+  searchCanchasLocations
 }

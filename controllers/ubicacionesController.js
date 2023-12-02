@@ -68,6 +68,28 @@ async function geocodingByAddress (req, res) {
   }
 }
 
+async function searchCanchas (req, res) {
+  try {
+    const { nombre } = req.query
+
+    const response = await ubicacionesServices.searchCanchasLocations({ nombre, userToken: req.jwt })
+
+    return res.json({
+      exitoso: true,
+      response
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 async function saveHistory (req, res) {
   try {
     const { data } = req.body
@@ -92,5 +114,6 @@ module.exports = {
   getGeolocationController,
   getNearbyLocationController,
   geocodingByAddress,
+  searchCanchas,
   saveHistory
 }
