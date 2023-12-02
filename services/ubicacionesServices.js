@@ -106,7 +106,7 @@ async function findByAddress ({ address, userToken }) {
 }
 
 async function searchCanchasLocations ({ nombre, userToken }) {
-  const mapsPlacesEndpoint = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nombre}+in+Lima,Peru&key=${process.env.GOOGLE_MAPS_API_KEY}`
+  const mapsPlacesEndpoint = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nombre}+cancha+Lima,Peru&key=${process.env.GOOGLE_MAPS_API_KEY}`
   const responseApi = await axios.get(mapsPlacesEndpoint)
 
   const locationsArray = responseApi.data.results.map((res) => {
