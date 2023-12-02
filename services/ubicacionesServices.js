@@ -115,7 +115,7 @@ async function searchCanchasLocations ({ nombre, userToken }) {
     return {
       leading: 'place',
       street: formatted_address,
-      nombre_cancha: name,
+      locality: name,
       location: geometry.location,
       emailUsuario: userToken?.email ?? null
     }
