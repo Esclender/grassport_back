@@ -117,7 +117,7 @@ async function obtenerFavorites ({ body, user }) {
       ]
     ).then(
       (data) => resolve({
-        favorites: data
+        response: data
       })
     )
   })
