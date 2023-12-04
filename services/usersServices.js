@@ -1,5 +1,6 @@
 const userSchema = require('../models/user')
 const historySchema = require('../models/userHistory')
+const favoriteSchema = require('../models/favorite')
 const { generateToken } = require('../utils/jwt')
 
 async function saveUserData ({ body, isCreated }) {
@@ -71,8 +72,61 @@ async function getUserHistory ({ isCreated }) {
   })
 }
 
+async function saveFavorite ({ body, user }) {
+  return new Promise((resolve, reject) => {
+    const { email } = user
+    const { data } = body
+
+    const newFavorite = {
+      emailUsuario: email,
+      leading: 'favorite',
+      fecha_guardado: Date.now(),
+      ...data
+    }
+
+    const addingFavorite = favoriteSchema(newFavorite)
+
+    addingFavorite.save()
+      .then(() => {
+        resolve()
+      })
+      .catch((e) => {
+        reject(e)
+      })
+  })
+}
+
+async function obtenerFavorites ({ body, user }) {
+  return new Promise((resolve, reject) => {
+    const { email } = user
+
+    favoriteSchema.aggregate(
+      [
+        {
+          $match:
+              {
+                emailUsuario: email
+              }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
+          }
+        }
+      ]
+    ).then(
+      (data) => resolve({
+        favorites: data
+      })
+    )
+  })
+}
+
 module.exports = {
   saveUserData,
   userData,
-  getUserHistory
+  getUserHistory,
+  saveFavorite,
+  obtenerFavorites
 }

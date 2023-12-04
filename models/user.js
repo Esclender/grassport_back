@@ -2,7 +2,7 @@
 const db = require('../helpers/db')
 
 const userSchema = new db.Schema({
-  nombre: { type: String, },
+  nombre: { type: String },
   email: { type: String, required: true, unique: true }
 })
 

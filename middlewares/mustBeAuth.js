@@ -3,7 +3,7 @@ async function mustBeAuthenticated (req, res, next) {
   if (!isLogged) {
     return res.status(401).json({
       exitoso: false,
-      message: 'Sin acceso a historial'
+      message: 'Sin acceso a este servicio'
     })
   }
 

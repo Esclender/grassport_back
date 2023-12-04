@@ -8,4 +8,11 @@ router.get('/', (req, res) => {
   })
 })
 
+router.get('/logs', (req, res) => {
+  return res.json({
+    exitoso: true,
+    mensaje: 'POSITION'
+  })
+})
+
 module.exports = router

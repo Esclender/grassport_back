@@ -63,8 +63,51 @@ async function userHistoryController (req, res) {
   }
 }
 
+async function userSaveFavorite (req, res) {
+  try {
+    const { jwt } = req
+    await usersServices.saveFavorite({ user: jwt, body: req.body })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
+async function userFavorites (req, res) {
+  try {
+    const { jwt } = req
+    const data = await usersServices.obtenerFavorites({ user: jwt })
+
+    return res.json({
+      exitoso: true,
+      ...data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   saveUserController,
   userDataController,
-  userHistoryController
+  userHistoryController,
+  userSaveFavorite,
+  userFavorites
 }
