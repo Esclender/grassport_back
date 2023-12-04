@@ -108,7 +108,7 @@ async function saveFavorite ({ body, user }) {
   })
 }
 
-async function obtenerFavorites ({ body, user }) {
+async function obtenerFavorites ({ user }) {
   return new Promise((resolve, reject) => {
     const { email } = user
 
@@ -135,11 +135,16 @@ async function obtenerFavorites ({ body, user }) {
   })
 }
 
+async function reportProblem ({ user }) {
+
+}
+
 module.exports = {
   saveUserData,
   userData,
   getUserHistory,
   saveFavorite,
   obtenerFavorites,
-  getUserData
+  getUserData,
+  reportProblem
 }

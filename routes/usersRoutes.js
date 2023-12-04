@@ -1,5 +1,10 @@
 const express = require('express')
 const router = express.Router()
+const multer = require('multer')
+
+// Multer configuration for handling file uploads
+const storage = multer.memoryStorage()
+const upload = multer({ storage })
 
 const isCreated = require('../middlewares/isEmailCreated')
 const isAuth = require('../middlewares/isAuth')
@@ -17,5 +22,7 @@ router.get('/mis-datos/historial', [isAuth], usuarioControllers.userHistoryContr
 
 router.post('/favoritos', [isAuth, mustBeAuthenticated], usuarioControllers.userSaveFavorite)
 router.get('/mis-datos/favoritos', [isAuth, mustBeAuthenticated], usuarioControllers.userFavorites)
+
+router.post('/report', [isAuth, mustBeAuthenticated, upload.single('image')], usuarioControllers.reportProblemController)
 
 module.exports = router
