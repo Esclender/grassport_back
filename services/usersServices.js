@@ -34,10 +34,19 @@ async function saveUserData ({ body, isCreated }) {
   })
 }
 
-async function userData ({ isCreated }) {
-  console.log(isCreated)
+async function userData ({ body, user }) {
+  const { email } = user
+  await userSchema.updateOne({ email }, { ...body })
+}
 
-  return 'DATOS DEL USUARIO'
+async function getUserData ({ user }) {
+  const { email } = user
+  const doc = await userSchema.findOne({ email }).exec()
+  const { _id, __v, ...data } = doc._doc
+
+  return {
+    ...data
+  }
 }
 
 async function getUserHistory ({ isCreated }) {
@@ -73,26 +82,29 @@ async function getUserHistory ({ isCreated }) {
 }
 
 async function saveFavorite ({ body, user }) {
+  const { email } = user
+  const { data } = body
+  const isSaved = await favoriteSchema.findOne({ street: data.street, email }).exec()
+
   return new Promise((resolve, reject) => {
-    const { email } = user
-    const { data } = body
+    if (isSaved) {
+      const newFavorite = {
+        emailUsuario: email,
+        leading: 'favorite',
+        fecha_guardado: Date.now(),
+        ...data
+      }
 
-    const newFavorite = {
-      emailUsuario: email,
-      leading: 'favorite',
-      fecha_guardado: Date.now(),
-      ...data
+      const addingFavorite = favoriteSchema(newFavorite)
+
+      addingFavorite.save()
+        .then(() => {
+          resolve()
+        })
+        .catch((e) => {
+          reject(e)
+        })
     }
-
-    const addingFavorite = favoriteSchema(newFavorite)
-
-    addingFavorite.save()
-      .then(() => {
-        resolve()
-      })
-      .catch((e) => {
-        reject(e)
-      })
   })
 }
 
@@ -128,5 +140,6 @@ module.exports = {
   userData,
   getUserHistory,
   saveFavorite,
-  obtenerFavorites
+  obtenerFavorites,
+  getUserData
 }

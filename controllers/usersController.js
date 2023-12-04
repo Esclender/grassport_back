@@ -24,7 +24,28 @@ async function saveUserController (req, res) {
 async function userDataController (req, res) {
   try {
     const { jwt } = req
-    const data = await usersServices.userData({ isCreated: jwt })
+    const data = await usersServices.userData({ user: jwt, body: req.body })
+
+    return res.json({
+      exitoso: true,
+      response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
+async function getUserDataController (req, res) {
+  try {
+    const { jwt } = req
+    const data = await usersServices.getUserData({ user: jwt })
 
     return res.json({
       exitoso: true,
@@ -109,5 +130,6 @@ module.exports = {
   userDataController,
   userHistoryController,
   userSaveFavorite,
-  userFavorites
+  userFavorites,
+  getUserDataController
 }

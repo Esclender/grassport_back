@@ -11,7 +11,8 @@ const usuarioControllers = require('../controllers/usersController')
 router.post('/', [isCreated], usuarioControllers.saveUserController)
 
 // REQ AUTH
-router.get('/mis-datos', [isAuth, mustBeAuthenticated], usuarioControllers.userDataController)
+router.post('/mis-datos', [isAuth, mustBeAuthenticated], usuarioControllers.userDataController)
+router.get('/mis-datos', [isAuth, mustBeAuthenticated], usuarioControllers.getUserDataController)
 router.get('/mis-datos/historial', [isAuth], usuarioControllers.userHistoryController)
 
 router.post('/favoritos', [isAuth, mustBeAuthenticated], usuarioControllers.userSaveFavorite)
