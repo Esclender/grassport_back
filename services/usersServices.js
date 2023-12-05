@@ -135,8 +135,11 @@ async function obtenerFavorites ({ user }) {
   })
 }
 
-async function reportProblem ({ user }) {
-
+async function reportProblem ({ user, file, body }) {
+   console.log({
+	file,
+	body
+   })
 }
 
 module.exports = {
