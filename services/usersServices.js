@@ -1,6 +1,9 @@
 const userSchema = require('../models/user')
 const historySchema = require('../models/userHistory')
 const favoriteSchema = require('../models/favorite')
+const reportSchema = require('../models/reportOfProblem')
+const admin = require('../firebase/admin')
+const path = require('path')
 const { generateToken } = require('../utils/jwt')
 
 async function saveUserData ({ body, isCreated }) {
@@ -136,10 +139,51 @@ async function obtenerFavorites ({ user }) {
 }
 
 async function reportProblem ({ user, file, body }) {
-   console.log({
-	file,
-	body
-   })
+  if (!file) {
+    throw Error('Ninguna imagen recibida.')
+  }
+
+  try {
+    const { email } = user
+    const bucket = admin.storage().bucket()
+
+    const fileName = Date.now() + path.extname(file.originalname)
+    const fileToUpload = bucket.file(fileName)
+
+    const findReport = await userSchema.aggregate(
+      [
+        {
+          $match:
+            {
+              email
+            }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
+          }
+        }
+      ]
+    )
+
+    const reportCreated = {
+      ...findReport[0],
+      ...body,
+      ref: fileName
+    }
+    const problemToMongo = reportSchema(reportCreated)
+
+    await problemToMongo.save()
+
+    await fileToUpload.save(file.buffer, {
+      metadata: {
+        contentType: file.mimetype
+      }
+    })
+  } catch (error) {
+    console.error('Error uploading file:', error)
+  }
 }
 
 module.exports = {

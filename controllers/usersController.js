@@ -128,7 +128,6 @@ async function userFavorites (req, res) {
 async function reportProblemController (req, res) {
   try {
     const { jwt } = req
-    
     await usersServices.reportProblem({ user: jwt, file: req.file, body: req.body })
 
     return res.json({

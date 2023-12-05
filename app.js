@@ -6,6 +6,7 @@ const logger = require('morgan')
 const indexRouter = require('./routes/index')
 const usuarioRouter = require('./routes/usersRoutes')
 const ubicacionesRouter = require('./routes/ubicacionesRoutes')
+const adminsRouter = require('./routes/adminsRoutes')
 
 const app = express()
 const corsOptions = {
@@ -25,6 +26,7 @@ app.use(cookieParser())
 app.use('/', indexRouter)
 app.use('/usuarios', usuarioRouter)
 app.use('/ubicacion', ubicacionesRouter)
+app.use('/admins', adminsRouter)
 
 // error handler
 app.use(function (err, req, res, next) {
