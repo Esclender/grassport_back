@@ -10,27 +10,28 @@ const { generateToken } = require('../utils/jwt')
 async function saveUserData ({ body, isCreated }) {
   return new Promise((resolve, reject) => {
     if (isCreated == null) {
+      const { email } = body
       const usuario = userSchema({
         ...body,
         isGoogleAuth: true,
         conteo_ingresos: 1
       })
-      const token = generateToken(body)
 
       usuario.save()
-        .then(() => {
+
+      adminSchema.findOne({ email }).exec()
+        .then((res) => {
+          const token = generateToken({ ...body, isAdmin: res != null })
           resolve({ token })
-        })
-        .catch((e) => {
-          reject(e)
         })
     } else {
       const { email, _id } = isCreated
+      console.log(isCreated)
       userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } }).then(() => {})
       adminSchema.findOne({ email }).exec()
         .then((res) => {
-          const token = generateToken({ email, _id })
-          resolve({ token, isAdmin: res != null })
+          const token = generateToken({ email, _id, isAdmin: res != null })
+          resolve({ token })
         })
     }
   })
@@ -45,12 +46,10 @@ async function loginSinGoogle ({ body }) {
 
   await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
   const isAdmin = await adminSchema.findOne({ email }).exec()
+  const { nombre } = isRegistered._doc
   // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
-  const token = generateToken({ email })
-  return {
-    token,
-    isAdmin: isAdmin != null
-  }
+  const token = generateToken({ email, nombre, isAdmin: isAdmin != null })
+  return { token }
 }
 
 async function registroUsuario ({ body }) { // REGISTRO

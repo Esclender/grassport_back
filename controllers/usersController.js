@@ -3,12 +3,11 @@ const usersServices = require('../services/usersServices')
 async function saveUserController (req, res) {
   try {
     const { body, user } = req
-    const { token, isAdmin } = await usersServices.saveUserData({ body, isCreated: user })
+    const { token } = await usersServices.saveUserData({ body, isCreated: user })
 
     return res.json({
       exitoso: true,
-      token,
-      isAdmin
+      token
     })
   } catch (error) {
     const { message, cause } = error
