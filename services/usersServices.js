@@ -47,6 +47,7 @@ async function loginSinGoogle ({ body }) {
   await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
   const isAdmin = await adminSchema.findOne({ email }).exec()
   const { nombre } = isRegistered._doc
+
   // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
   const token = generateToken({ email, nombre, isAdmin: isAdmin != null })
   return { token }
@@ -124,7 +125,7 @@ async function saveFavorite ({ body, user }) {
   const isSaved = await favoriteSchema.findOne({ street: data.street, email }).exec()
 
   return new Promise((resolve, reject) => {
-    if (isSaved) {
+    if (!isSaved) {
       const newFavorite = {
         emailUsuario: email,
         leading: 'favorite',
@@ -141,6 +142,8 @@ async function saveFavorite ({ body, user }) {
         .catch((e) => {
           reject(e)
         })
+    } else {
+      resolve({})
     }
   })
 }
