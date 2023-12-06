@@ -5,7 +5,9 @@ const userSchema = new db.Schema({
   nombre: { type: String },
   numero: { type: String },
   email: { type: String, required: true, unique: true },
-  apellido: { type: String }
+  apellido: { type: String },
+  clave: { type: String },
+  isGoogleAuth: { type: Boolean }
 })
 
 userSchema.methods = {

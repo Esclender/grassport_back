@@ -5,9 +5,10 @@ const reportSchema = new db.Schema({
   nombre: { type: String },
   apellido: { type: String },
   numero: { type: String },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: false },
   ref: { type: String, required: true },
-  descripcion: { type: String, required: true }
+  descripcion: { type: String, required: true },
+  fecha_creacion: { type: Date, required: true }
 })
 
 reportSchema.methods = {

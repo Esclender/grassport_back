@@ -14,6 +14,8 @@ const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 
 router.post('/', [isCreated], usuarioControllers.saveUserController)
+router.post('/login', usuarioControllers.loginUserSinGoogleController)
+router.post('/registro', usuarioControllers.registerUserController)
 
 // REQ AUTH
 router.post('/mis-datos', [isAuth, mustBeAuthenticated], usuarioControllers.userDataController)

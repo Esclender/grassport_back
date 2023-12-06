@@ -21,6 +21,47 @@ async function saveUserController (req, res) {
   }
 }
 
+async function loginUserSinGoogleController (req, res) {
+  try {
+    const { body } = req
+    const { token } = await usersServices.loginSinGoogle({ body })
+
+    return res.json({
+      exitoso: true,
+      token
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
+async function registerUserController (req, res) {
+  try {
+    const { body } = req
+    await usersServices.registroUsuario({ body })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 async function userDataController (req, res) {
   try {
     const { jwt } = req
@@ -152,5 +193,7 @@ module.exports = {
   userSaveFavorite,
   userFavorites,
   getUserDataController,
-  reportProblemController
+  reportProblemController,
+  loginUserSinGoogleController,
+  registerUserController
 }

@@ -9,18 +9,11 @@ const { generateToken } = require('../utils/jwt')
 async function saveUserData ({ body, isCreated }) {
   return new Promise((resolve, reject) => {
     if (isCreated == null) {
-      const { latitude, longitude, ...rest } = body
-
-      const newUser = {
-        ...rest,
-        ultima_ubicacion: {
-          latitude,
-          longitude
-        }
-      }
-
-      const usuario = userSchema(newUser)
-      const token = generateToken(newUser)
+      const usuario = userSchema({
+        ...body,
+        isGoogleAuth: true
+      })
+      const token = generateToken(body)
 
       usuario.save()
         .then(() => {
@@ -30,11 +23,42 @@ async function saveUserData ({ body, isCreated }) {
           reject(e)
         })
     } else {
-      const { ultima_ubicacion, email, _id } = isCreated
-      const token = generateToken({ ultima_ubicacion, email, _id })
+      const { email, _id } = isCreated
+      const token = generateToken({ email, _id })
       resolve({ token })
     }
   })
+}
+
+async function loginSinGoogle ({ body }) {
+  const { email, clave } = body
+
+  const isRegistered = await userSchema.findOne({ email, clave }).exec()
+
+  if (!isRegistered) throw Error('No registrado')
+
+  // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
+
+  const token = generateToken({ email })
+  return token
+}
+
+async function registroUsuario ({ body }) { // REGISTRO
+  const { email } = body
+  const isCreated = await userSchema.findOne({ email }).exec()
+
+  if (isCreated?.isGoogleAuth) {
+    await userSchema.deleteOne({ email })
+  }
+
+  if (!isCreated?.isGoogleAuth && isCreated != null) throw Error('Email ya registrado')
+
+  const usuario = userSchema({
+    ...body,
+    isGoogleAuth: false
+  })
+
+  await usuario.save()
 }
 
 async function userData ({ body, user }) {
@@ -170,7 +194,8 @@ async function reportProblem ({ user, file, body }) {
     const reportCreated = {
       ...findReport[0],
       ...body,
-      ref: fileName
+      ref: fileName,
+      fecha_Creacion: Date.now()
     }
     const problemToMongo = reportSchema(reportCreated)
 
@@ -193,5 +218,7 @@ module.exports = {
   saveFavorite,
   obtenerFavorites,
   getUserData,
-  reportProblem
+  reportProblem,
+  loginSinGoogle,
+  registroUsuario
 }
