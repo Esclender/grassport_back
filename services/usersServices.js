@@ -39,7 +39,7 @@ async function saveUserData ({ body, isCreated }) {
 
 async function loginSinGoogle ({ body }) {
   const { email, clave } = body
-
+  console.log(email, clave)
   const isRegistered = await userSchema.findOne({ email, clave }).exec()
 
   if (!isRegistered) throw Error('No registrado')
