@@ -7,7 +7,8 @@ const userSchema = new db.Schema({
   email: { type: String, required: true, unique: true },
   apellido: { type: String },
   clave: { type: String },
-  isGoogleAuth: { type: Boolean }
+  isGoogleAuth: { type: Boolean },
+  conteo_ingresos: { type: Number }
 })
 
 userSchema.methods = {

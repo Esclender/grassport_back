@@ -1,4 +1,5 @@
 const userSchema = require('../models/user')
+const adminSchema = require('../models/admins')
 const historySchema = require('../models/userHistory')
 const favoriteSchema = require('../models/favorite')
 const reportSchema = require('../models/reportOfProblem')
@@ -11,7 +12,8 @@ async function saveUserData ({ body, isCreated }) {
     if (isCreated == null) {
       const usuario = userSchema({
         ...body,
-        isGoogleAuth: true
+        isGoogleAuth: true,
+        conteo_ingresos: 1
       })
       const token = generateToken(body)
 
@@ -24,8 +26,12 @@ async function saveUserData ({ body, isCreated }) {
         })
     } else {
       const { email, _id } = isCreated
-      const token = generateToken({ email, _id })
-      resolve({ token })
+      userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } }).then(() => {})
+      adminSchema.findOne({ email }).exec()
+        .then((res) => {
+          const token = generateToken({ email, _id })
+          resolve({ token, isAdmin: res != null })
+        })
     }
   })
 }
@@ -37,10 +43,14 @@ async function loginSinGoogle ({ body }) {
 
   if (!isRegistered) throw Error('No registrado')
 
+  await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
+  const isAdmin = await adminSchema.findOne({ email }).exec()
   // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
-
   const token = generateToken({ email })
-  return token
+  return {
+    token,
+    isAdmin: isAdmin != null
+  }
 }
 
 async function registroUsuario ({ body }) { // REGISTRO
@@ -55,7 +65,8 @@ async function registroUsuario ({ body }) { // REGISTRO
 
   const usuario = userSchema({
     ...body,
-    isGoogleAuth: false
+    isGoogleAuth: false,
+    conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0
   })
 
   await usuario.save()

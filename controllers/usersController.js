@@ -3,11 +3,12 @@ const usersServices = require('../services/usersServices')
 async function saveUserController (req, res) {
   try {
     const { body, user } = req
-    const { token } = await usersServices.saveUserData({ body, isCreated: user })
+    const { token, isAdmin } = await usersServices.saveUserData({ body, isCreated: user })
 
     return res.json({
       exitoso: true,
-      token
+      token,
+      isAdmin
     })
   } catch (error) {
     const { message, cause } = error
@@ -24,11 +25,11 @@ async function saveUserController (req, res) {
 async function loginUserSinGoogleController (req, res) {
   try {
     const { body } = req
-    const { token } = await usersServices.loginSinGoogle({ body })
+    const data = await usersServices.loginSinGoogle({ body })
 
     return res.json({
       exitoso: true,
-      token
+      ...data
     })
   } catch (error) {
     const { message, cause } = error
