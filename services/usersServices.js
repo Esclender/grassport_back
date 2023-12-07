@@ -208,7 +208,7 @@ async function reportProblem ({ user, file, body }) {
       ...findReport[0],
       ...body,
       ref: fileName,
-      fecha_Creacion: Date.now()
+      fecha_creacion: Date.now()
     }
     const problemToMongo = reportSchema(reportCreated)
 
