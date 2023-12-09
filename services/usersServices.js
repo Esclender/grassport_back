@@ -137,7 +137,8 @@ async function saveFavorite ({ body, user }) {
   const { email } = user
   const { data } = body
   const isSaved = await favoriteSchema.findOne({ street: data.street, emailUsuario: email }).exec()
-
+  console.log(data)
+  console.log(isSaved)
   return new Promise((resolve, reject) => {
     if (!isSaved) {
       const newFavorite = {
