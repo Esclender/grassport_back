@@ -5,7 +5,7 @@ const generateToken = function (dataToken) {
     dataToken,
     process.env.ACCESS_SECRET,
     {
-      expiresIn: '40m'
+      expiresIn: '24h'
     }
   )
 

@@ -200,6 +200,9 @@ async function getAdminPanel ({ user }) {
     { $project: { email: 1 } }
   ]
 
+  const expirationDate = new Date()
+  expirationDate.setDate(expirationDate.getDate() + 1)
+
   const adminEmails = await adminSchema.aggregate(adminsPipeline)
   const emailToExclude = adminEmails.map((admin) => admin.email)
 
@@ -219,6 +222,29 @@ async function getAdminPanel ({ user }) {
   ]
 
   const topIngresos = await userSchema.aggregate(topIngresosPipeline)
+
+  const topUsersWithImageURLs = await Promise.all(
+    topIngresos.map(async (user) => {
+      const { ref, fecha_creacion, fecha_ultimo_ingreso } = user
+      const bucket = admin.storage().bucket()
+      const destinationFolder = 'usuarios'
+
+      const fileToUpload = bucket.file(`${destinationFolder}/${ref}`)
+
+      const [url] = await fileToUpload.getSignedUrl({
+        action: 'read',
+        expires: expirationDate.toISOString()
+      })
+
+      return {
+        ...user,
+        imageURL: url,
+        fecha_creacion: convertISOToYYMMDD(fecha_creacion),
+        fecha_ultimo_ingreso: convertISOToYYMMDD(fecha_ultimo_ingreso)
+
+      }
+    })
+  )
 
   const reportesWeekCount = await reportSchema.aggregate(
     [
@@ -259,16 +285,13 @@ async function getAdminPanel ({ user }) {
 
   const fileToUpload = bucket.file(`${destinationFolder}/${ref}`)
 
-  const expirationDate = new Date()
-  expirationDate.setDate(expirationDate.getDate() + 1)
-
   const [url] = await fileToUpload.getSignedUrl({
     action: 'read',
     expires: expirationDate.toISOString()
   })
 
   return {
-    topIngresos,
+    topUsersWithImageURLs,
     reports_week: reportesWeekCount[0].totalReports,
     usuariosCount,
     reportesCount,
