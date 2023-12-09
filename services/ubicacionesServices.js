@@ -120,11 +120,13 @@ async function searchCanchasLocations ({ nombre, userToken }) {
       emailUsuario: userToken?.email ?? null
     }
   })
+
   return locationsArray
 }
 
 async function saveHistoryLocation ({ data, userToken }) {
-  const isSaved = await History.findOne({ street: data.street, email: userToken?.email }).exec()
+  const isSaved = await History.findOne({ street: data.street, emailUsuario: userToken?.email }).exec()
+  console.log(isSaved)
 
   if (!isSaved) {
     const mappedData = new History({
