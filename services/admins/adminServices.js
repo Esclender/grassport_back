@@ -135,7 +135,7 @@ async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
 
     const usersWithImageURLs = await Promise.all(
       allUsers.map(async (user) => {
-        const { ref, fecha_creacion } = user
+        const { ref, fecha_creacion, fecha_ultimo_ingreso } = user
         const bucket = admin.storage().bucket()
         const destinationFolder = 'usuarios'
 
@@ -149,14 +149,15 @@ async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
         return {
           ...user,
           imageURL: url,
-          fecha_creacion: convertISOToYYMMDD(fecha_creacion)
+          fecha_creacion: convertISOToYYMMDD(fecha_creacion),
+          fecha_ultimo_ingreso: convertISOToYYMMDD(fecha_ultimo_ingreso)
         }
       })
     )
 
     const topUsersWithImageURLs = await Promise.all(
       topIngresos.map(async (user) => {
-        const { ref, fecha_creacion } = user
+        const { ref, fecha_creacion, fecha_ultimo_ingreso } = user
         const bucket = admin.storage().bucket()
         const destinationFolder = 'usuarios'
 
@@ -170,7 +171,9 @@ async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
         return {
           ...user,
           imageURL: url,
-          fecha_creacion: convertISOToYYMMDD(fecha_creacion)
+          fecha_creacion: convertISOToYYMMDD(fecha_creacion),
+          fecha_ultimo_ingreso: convertISOToYYMMDD(fecha_ultimo_ingreso)
+
         }
       })
     )
