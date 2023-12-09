@@ -5,7 +5,8 @@ const adminSchema = new db.Schema({
   nombre: { type: String },
   numero: { type: String },
   email: { type: String, required: true, unique: true },
-  apellido: { type: String }
+  apellido: { type: String },
+  ref: { type: String }
 })
 
 adminSchema.methods = {

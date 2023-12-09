@@ -42,7 +42,51 @@ async function getReportsController (req, res) {
   }
 }
 
+async function getUsersList (req, res) {
+  try {
+    const { tops, nombre, orden } = req.query
+    const reports = await adminServices.getUsersList({ tops, filterName: nombre, orderBy: orden })
+
+    return res.json({
+      exitoso: true,
+      response: reports
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
+async function getPanelController (req, res) {
+  try {
+    const { jwt } = req
+    const panel = await adminServices.getAdminPanel({ user: jwt })
+
+    return res.json({
+      exitoso: true,
+      response: panel
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   getReportsController,
-  accesoController
+  accesoController,
+  getUsersList,
+  getPanelController
 }

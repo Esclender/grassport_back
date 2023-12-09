@@ -14,7 +14,8 @@ async function saveUserData ({ body, isCreated }) {
       const usuario = userSchema({
         ...body,
         isGoogleAuth: true,
-        conteo_ingresos: 1
+        conteo_ingresos: 1,
+        fecha_creacion: Date.now()
       })
 
       usuario.save()
@@ -54,7 +55,7 @@ async function loginSinGoogle ({ body }) {
 }
 
 async function registroUsuario ({ body }) { // REGISTRO
-  const { email } = body
+  const { email, nombre } = body
   const isCreated = await userSchema.findOne({ email }).exec()
 
   if (isCreated?.isGoogleAuth) {
@@ -65,8 +66,11 @@ async function registroUsuario ({ body }) { // REGISTRO
 
   const usuario = userSchema({
     ...body,
+    nombre_minuscula: nombre.toLowerCase(),
     isGoogleAuth: false,
-    conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0
+    conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0,
+    ref: 'profile-ddefault.png',
+    fecha_creacion: Date.now()
   })
 
   await usuario.save()
@@ -185,7 +189,7 @@ async function reportProblem ({ user, file, body }) {
     const bucket = admin.storage().bucket()
 
     const fileName = Date.now() + path.extname(file.originalname)
-    const fileToUpload = bucket.file(fileName)
+    const fileToUpload = bucket.file(`reportes/${fileName}`)
 
     const findReport = await userSchema.aggregate(
       [
