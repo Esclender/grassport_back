@@ -5,6 +5,7 @@ const favoriteSchema = require('../models/favorite')
 const reportSchema = require('../models/reportOfProblem')
 const admin = require('../firebase/admin')
 const path = require('path')
+const getImagePublicUrl = require('../utils/retrieveImageFromSto')
 const { generateToken } = require('../utils/jwt')
 
 async function saveUserData ({ body, isCreated }) {
@@ -28,11 +29,10 @@ async function saveUserData ({ body, isCreated }) {
         })
     } else {
       const { email, _id } = isCreated
-      console.log(isCreated)
       userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } }).then(() => {})
       adminSchema.findOne({ email }).exec()
         .then((res) => {
-          const token = generateToken({ email, _id, isAdmin: res != null })
+          const token = generateToken({ ...body, _id, isAdmin: res != null })
           resolve({ token })
         })
     }
@@ -44,6 +44,14 @@ async function loginSinGoogle ({ body }) {
   console.log(email, clave)
   const isRegistered = await userSchema.findOne({ email, clave }).exec()
 
+  // get image url FOR 24 HOURS
+  const bucket = admin.storage().bucket()
+  const destinationFolder = 'usuarios'
+
+  const fileToUpload = bucket.file(`${destinationFolder}/${isRegistered.ref}`)
+
+  const url = await getImagePublicUrl(fileToUpload)
+
   if (!isRegistered) throw Error('No registrado')
 
   await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
@@ -51,7 +59,7 @@ async function loginSinGoogle ({ body }) {
   const { nombre } = isRegistered._doc
 
   // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
-  const token = generateToken({ email, nombre, isAdmin: isAdmin != null })
+  const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
   return { token }
 }
 
