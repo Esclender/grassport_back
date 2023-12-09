@@ -11,6 +11,7 @@ const userSchema = new db.Schema({
   isGoogleAuth: { type: Boolean },
   conteo_ingresos: { type: Number },
   fecha_creacion: { type: Date, required: true },
+  fecha_ultimo_ingreso: { type: Date, required: true },
   ref: { type: String }
 
 })

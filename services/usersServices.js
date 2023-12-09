@@ -15,7 +15,8 @@ async function saveUserData ({ body, isCreated }) {
         ...body,
         isGoogleAuth: true,
         conteo_ingresos: 1,
-        fecha_creacion: Date.now()
+        fecha_creacion: Date.now(),
+        fecha_ultimo_ingreso: Date.now()
       })
 
       usuario.save()
@@ -70,7 +71,8 @@ async function registroUsuario ({ body }) { // REGISTRO
     isGoogleAuth: false,
     conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0,
     ref: 'profile-ddefault.png',
-    fecha_creacion: Date.now()
+    fecha_creacion: Date.now(),
+    fecha_ultimo_ingreso: Date.now()
   })
 
   await usuario.save()

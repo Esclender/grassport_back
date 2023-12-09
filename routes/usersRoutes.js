@@ -7,14 +7,16 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage })
 
 const isCreated = require('../middlewares/isEmailCreated')
+const isUserRegistered = require('../middlewares/isUserRegistered')
+const updateLastIngreso = require('../middlewares/updateLastIngreso')
 const isAuth = require('../middlewares/isAuth')
 
 // const ubicacionesController = require('../controllers/ubicacionesController')
 const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 
-router.post('/', [isCreated], usuarioControllers.saveUserController)
-router.post('/login', usuarioControllers.loginUserSinGoogleController)
+router.post('/', [isUserRegistered, updateLastIngreso, isCreated], usuarioControllers.saveUserController)
+router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
 router.post('/registro', usuarioControllers.registerUserController)
 
 // REQ AUTH
