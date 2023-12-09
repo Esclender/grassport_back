@@ -15,7 +15,7 @@ const isAuth = require('../middlewares/isAuth')
 const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 
-router.post('/', [isUserRegistered, updateLastIngreso, isCreated], usuarioControllers.saveUserController)
+router.post('/', [isCreated], usuarioControllers.saveUserController)
 router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
 router.post('/registro', usuarioControllers.registerUserController)
 
