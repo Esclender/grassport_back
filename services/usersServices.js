@@ -136,7 +136,7 @@ async function getUserHistory ({ isCreated }) {
 async function saveFavorite ({ body, user }) {
   const { email } = user
   const { data } = body
-  const isSaved = await favoriteSchema.findOne({ street: data.street, email }).exec()
+  const isSaved = await favoriteSchema.findOne({ street: data.street, emailUsuario: email }).exec()
 
   return new Promise((resolve, reject) => {
     if (!isSaved) {
@@ -150,14 +150,17 @@ async function saveFavorite ({ body, user }) {
       const addingFavorite = favoriteSchema(newFavorite)
 
       addingFavorite.save()
-        .then(() => {
+        .then((r) => {
+          console.log(r)
           resolve()
         })
         .catch((e) => {
           reject(e)
         })
     } else {
-      resolve({})
+      resolve({
+        message: 'Ya guardado'
+      })
     }
   })
 }
