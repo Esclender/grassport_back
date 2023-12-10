@@ -2,6 +2,7 @@ const { default: axios } = require('axios')
 const History = require('../models/userHistory')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const client = new Client({})
+const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
 async function getGeolocation ({ latitude, longitude }) {
   return new Promise((resolve, reject) => {
@@ -51,14 +52,11 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
       }
     })
 
-    // console.log(client.placePhoto({
-    //   params: {
-
-    //   }
-    // }))
-
     const nearbyLocations = response.data.results.map((location) => {
-      const { geometry, name, vicinity, rating, opening_hours } = location
+      const { geometry, name, vicinity, rating, opening_hours, photos } = location
+
+      const photoR = photos[0].photo_reference
+      const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
 
       return {
         location: {
@@ -68,7 +66,8 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
         name,
         address: vicinity,
         rating: Math.round(rating),
-        isOpen: opening_hours?.open_now ?? null
+        isOpen: opening_hours?.open_now ?? null,
+        photoURL: photoR != null ? url : defaultImg
       }
     })
 
