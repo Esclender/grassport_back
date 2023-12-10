@@ -84,7 +84,7 @@ async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
     }
 
     const sortConditions = {}
-    if (ordenPor === 'name') {
+    if (ordenPor === 'nombre') {
       sortConditions.nombre_minuscula = checkOrder(orden)
     } else if (ordenPor === 'fecha_creacion') {
       sortConditions.fecha_creacion = checkOrder(orden)
