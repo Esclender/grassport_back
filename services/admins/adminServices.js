@@ -206,7 +206,7 @@ async function getAdminPanel ({ user }) {
   const adminEmails = await adminSchema.aggregate(adminsPipeline)
   const emailToExclude = adminEmails.map((admin) => admin.email)
 
-  const usuariosCount = await userSchema.countDocuments()
+  const usuariosCount = await userSchema.countDocuments({ isGoogleAuth: false, email: { $nin: emailToExclude } })
   const reportesCount = await reportSchema.countDocuments()
 
   const topIngresosPipeline = [
