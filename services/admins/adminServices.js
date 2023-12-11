@@ -292,7 +292,7 @@ async function getAdminPanel ({ user }) {
 
   return {
     topUsersWithImageURLs,
-    reports_week: reportesWeekCount[0]?.totalReports ?? [],
+    reports_week: reportesWeekCount[0]?.totalReports ?? 0,
     usuariosCount,
     reportesCount,
     admin_info: {
