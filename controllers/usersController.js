@@ -1,9 +1,9 @@
 const usersServices = require('../services/usersServices')
 
-async function saveUserController (req, res) {
+async function loginUserWithGoogleController (req, res) {
   try {
     const { body, user } = req
-    const { token } = await usersServices.saveUserData({ body, isCreated: user })
+    const { token } = await usersServices.loginUserWithGoogle({ body, isCreated: user })
 
     return res.json({
       exitoso: true,
@@ -44,11 +44,14 @@ async function loginUserSinGoogleController (req, res) {
 
 async function registerUserController (req, res) {
   try {
-    const { body } = req
-    await usersServices.registroUsuario({ body })
+    const { body, file } = req
+    const data = await usersServices.registroUsuario({ body, image: file })
 
     return res.json({
-      exitoso: true
+      exitoso: true,
+      response: {
+        ...data
+      }
     })
   } catch (error) {
     const { message, cause } = error
@@ -64,12 +67,32 @@ async function registerUserController (req, res) {
 
 async function userDataController (req, res) {
   try {
-    const { jwt } = req
-    const data = await usersServices.userData({ user: jwt, body: req.body })
+    const { jwt, file } = req
+    const data = await usersServices.userData({ user: jwt, body: req.body, image: file })
 
     return res.json({
       exitoso: true,
       response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
+async function completedRegisterController (req, res) {
+  try {
+    const { body } = req
+    await usersServices.completedRegister({ body })
+
+    return res.json({
+      exitoso: true
     })
   } catch (error) {
     const { message, cause } = error
@@ -166,10 +189,30 @@ async function userFavorites (req, res) {
   }
 }
 
+async function deleteFavoriteController (req, res) {
+  try {
+    const { id_favorite } = req.params
+    await usersServices.deleteFavorite({ idFavorite: id_favorite })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 async function reportProblemController (req, res) {
   try {
     const { jwt } = req
-    console.log(req.file)
+    console.log(jwt)
     await usersServices.reportProblem({ user: jwt, file: req.file, body: req.body })
 
     return res.json({
@@ -188,7 +231,7 @@ async function reportProblemController (req, res) {
 }
 
 module.exports = {
-  saveUserController,
+  loginUserWithGoogleController,
   userDataController,
   userHistoryController,
   userSaveFavorite,
@@ -196,5 +239,7 @@ module.exports = {
   getUserDataController,
   reportProblemController,
   loginUserSinGoogleController,
-  registerUserController
+  registerUserController,
+  deleteFavoriteController,
+  completedRegisterController
 }

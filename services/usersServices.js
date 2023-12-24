@@ -7,42 +7,25 @@ const admin = require('../firebase/admin')
 const path = require('path')
 const getImagePublicUrl = require('../utils/retrieveImageFromSto')
 const { generateToken } = require('../utils/jwt')
+const { sendCodeEmail } = require('../utils/authCheck')
 
-async function saveUserData ({ body, isCreated }) {
-  return new Promise((resolve, reject) => {
-    if (isCreated == null) {
-      const { email } = body
-      const usuario = userSchema({
-        ...body,
-        isGoogleAuth: true,
-        conteo_ingresos: 1,
-        fecha_creacion: Date.now(),
-        fecha_ultimo_ingreso: Date.now()
-      })
+async function loginUserWithGoogle ({ body }) {
+  const { email } = body
 
-      usuario.save()
+  const isAdmin = await adminSchema.findOne({ email }).exec()
 
-      adminSchema.findOne({ email }).exec()
-        .then((res) => {
-          const token = generateToken({ ...body, isAdmin: res != null })
-          resolve({ token })
-        })
-    } else {
-      const { email, _id } = isCreated
-      userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } }).then(() => {})
-      adminSchema.findOne({ email }).exec()
-        .then((res) => {
-          const token = generateToken({ ...body, _id, isAdmin: res != null })
-          resolve({ token })
-        })
-    }
-  })
+  const token = generateToken({ ...body, isAdmin: isAdmin != null })
+
+  return {
+    token
+  }
 }
 
 async function loginSinGoogle ({ body }) {
   const { email, clave } = body
-  console.log(email, clave)
   const isRegistered = await userSchema.findOne({ email, clave }).exec()
+
+  if (!isRegistered) throw Error('Correo no registrado')
 
   // get image url FOR 24 HOURS
   const bucket = admin.storage().bucket()
@@ -56,16 +39,23 @@ async function loginSinGoogle ({ body }) {
 
   await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
   const isAdmin = await adminSchema.findOne({ email }).exec()
-  const { nombre } = isRegistered._doc
+  const { nombre, auth } = isRegistered._doc
+
+  if (!auth) throw Error('Correo no registrado')
 
   // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
   const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
   return { token }
 }
 
-async function registroUsuario ({ body }) { // REGISTRO
+async function registroUsuario ({ body, image }) { // REGISTRO
   const { email, nombre } = body
   const isCreated = await userSchema.findOne({ email }).exec()
+  const isAdminOrEditor = await adminSchema.findOne({ email }).exec()
+
+  if (isAdminOrEditor) throw Error('Correo registrado')
+
+  const fileName = image == null ? 'profile-ddefault.png' : Date.now() + path.extname(image.originalname)
 
   if (isCreated?.isGoogleAuth) {
     await userSchema.deleteOne({ email })
@@ -73,22 +63,103 @@ async function registroUsuario ({ body }) { // REGISTRO
 
   if (!isCreated?.isGoogleAuth && isCreated != null) throw Error('Email ya registrado')
 
+  if (image) {
+    const bucket = admin.storage().bucket()
+
+    const fileToUpload = bucket.file(`usuarios/${fileName}`)
+
+    await fileToUpload.save(image.buffer, {
+      metadata: {
+        contentType: image.mimetype
+      }
+    })
+  }
+
   const usuario = userSchema({
     ...body,
     nombre_minuscula: nombre.toLowerCase(),
     isGoogleAuth: false,
     conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0,
-    ref: 'profile-ddefault.png',
+    ref: fileName,
     fecha_creacion: Date.now(),
+    auth: false,
     fecha_ultimo_ingreso: Date.now()
   })
 
+  const verificationCode = await sendCodeEmail({ to: email })
+
   await usuario.save()
+
+  return {
+    verificationCode,
+    expirationTime: 500
+  }
 }
 
-async function userData ({ body, user }) {
+async function completedRegister ({ body }) {
+  const { email } = body
+
+  await userSchema.findOneAndUpdate({ email }, { auth: true })
+}
+
+async function userData ({ body, user, image }) {
   const { email } = user
-  await userSchema.updateOne({ email }, { ...body })
+
+  const userData = await userSchema.findOne({ email }).exec()
+
+  if (!userData) {
+    const fileName = image == null
+      ? 'profile-ddefault.png'
+      : Date.now() + path.extname(image.originalname)
+
+    const bucket = admin.storage().bucket()
+
+    const fileToUpload = bucket.file(`usuarios/${fileName}`)
+
+    const saveUser = userSchema(
+      {
+        email,
+        fecha_creacion: Date.now(),
+        fecha_ultimo_ingreso: Date.now(),
+        auth: false,
+        isGoogleAuth: true,
+        ref: fileName,
+        ...body
+      }
+    )
+
+    await fileToUpload.save(image.buffer, {
+      metadata: {
+        contentType: image.mimetype
+      }
+    })
+
+    await saveUser.save()
+  } else {
+    const fileName = image == null
+      ? userData.ref
+      : Date.now() + path.extname(image.originalname)
+
+    if (image) {
+      const bucket = admin.storage().bucket()
+
+      const fileToUpload = bucket.file(`usuarios/${fileName}`)
+
+      if (userData.ref != 'profile-ddefault.png' && userData.ref != null) {
+        const fileToUpload = bucket.file(`usuarios/${userData.ref}`)
+
+        await fileToUpload.delete()
+      }
+
+      await fileToUpload.save(image.buffer, {
+        metadata: {
+          contentType: image.mimetype
+        }
+      })
+    }
+
+    await userSchema.updateOne({ email }, { ...body, ref: fileName })
+  }
 }
 
 async function getUserData ({ user }) {
@@ -137,8 +208,7 @@ async function saveFavorite ({ body, user }) {
   const { email } = user
   const { data } = body
   const isSaved = await favoriteSchema.findOne({ street: data.street, emailUsuario: email }).exec()
-  console.log(data)
-  console.log(isSaved)
+
   return new Promise((resolve, reject) => {
     if (!isSaved) {
       const newFavorite = {
@@ -166,6 +236,10 @@ async function saveFavorite ({ body, user }) {
   })
 }
 
+async function deleteFavorite ({ idFavorite }) {
+  await favoriteSchema.findByIdAndDelete(idFavorite)
+}
+
 async function obtenerFavorites ({ user }) {
   return new Promise((resolve, reject) => {
     const { email } = user
@@ -180,9 +254,16 @@ async function obtenerFavorites ({ user }) {
         },
         {
           $project: {
-            _id: 0,
             __v: 0
           }
+        },
+        {
+          $addFields: {
+            id: '$_id'
+          }
+        },
+        {
+          $unset: '_id'
         }
       ]
     ).then(
@@ -223,6 +304,7 @@ async function reportProblem ({ user, file, body }) {
     )
 
     const reportCreated = {
+      email,
       ...findReport[0],
       ...body,
       ref: fileName,
@@ -242,8 +324,12 @@ async function reportProblem ({ user, file, body }) {
   }
 }
 
+async function updateProblemStatus ({ user, idReport }) {
+
+}
+
 module.exports = {
-  saveUserData,
+  loginUserWithGoogle,
   userData,
   getUserHistory,
   saveFavorite,
@@ -251,5 +337,8 @@ module.exports = {
   getUserData,
   reportProblem,
   loginSinGoogle,
-  registroUsuario
+  registroUsuario,
+  completedRegister,
+  deleteFavorite,
+  updateProblemStatus
 }

@@ -24,7 +24,8 @@
     "moongose": "^1.0.0",
     "morgan": "~1.9.1",
     "multer": "^1.4.5-lts.1",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "resend": "^2.0.0"
   },
   "devDependencies": {
     "eslint": "^8.53.0",

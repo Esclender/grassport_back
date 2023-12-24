@@ -53,8 +53,16 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
     })
 
     const nearbyLocations = response.data.results.map((location) => {
+      client.placeDetails({
+        params: {
+          key: process.env.GOOGLE_MAPS_API_KEY,
+          place_id: location.place_id,
+          language: 'es'
+        }
+
+      }).then((r) => console.log(r.data, 'DETAILS'))
+
       const { geometry, name, vicinity, rating, opening_hours, photos } = location
-	console.log(photos)
       const photoR = photos != undefined ? photos[0].photo_reference : null
       const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
 

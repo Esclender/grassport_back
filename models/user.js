@@ -9,6 +9,7 @@ const userSchema = new db.Schema({
   apellido: { type: String },
   clave: { type: String },
   isGoogleAuth: { type: Boolean },
+  auth: { type: Boolean },
   conteo_ingresos: { type: Number },
   fecha_creacion: { type: Date, required: true },
   fecha_ultimo_ingreso: { type: Date, required: true },
