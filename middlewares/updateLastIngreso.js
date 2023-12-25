@@ -10,6 +10,8 @@ async function updateLastIngreso (req, res, next) {
     await userSchema.updateOne({ email }, {
       fecha_ultimo_ingreso: Date.now()
     })
+
+    await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
   }
 
   next()

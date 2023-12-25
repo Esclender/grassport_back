@@ -29,9 +29,16 @@ async function getReports () {
     [
       {
         $project: {
-          _id: 0,
           __v: 0
         }
+      },
+      {
+        $addFields: {
+          id: '$_id'
+        }
+      },
+      {
+        $unset: '_id'
       }
     ]
   )
@@ -302,9 +309,19 @@ async function getAdminPanel ({ user }) {
   }
 }
 
+async function updateProblemStatus ({ body, idReport }) {
+  const { comentario } = body
+
+  await reportSchema.findByIdAndUpdate(idReport, {
+    comentario,
+    status: 1
+  })
+}
+
 module.exports = {
   getReports,
   acceso,
   getUsersList,
-  getAdminPanel
+  getAdminPanel,
+  updateProblemStatus
 }

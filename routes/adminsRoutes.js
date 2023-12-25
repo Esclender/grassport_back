@@ -10,6 +10,7 @@ const isAdmin = require('../middlewares/isAdmin')
 router.post('/acceso', adminController.accesoController)
 
 router.get('/report', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin], adminController.getReportsController)
+router.put('/report/:id_reporte', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin], adminController.updateReportStatusController)
 
 router.get('/usuarios', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin], adminController.getUsersList)
 

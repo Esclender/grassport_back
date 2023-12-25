@@ -84,9 +84,31 @@ async function getPanelController (req, res) {
   }
 }
 
+async function updateReportStatusController (req, res) {
+  try {
+    const { id_reporte } = req.params
+    console.log(id_reporte)
+    await adminServices.updateProblemStatus({ body: req.body, idReport: id_reporte })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   getReportsController,
   accesoController,
   getUsersList,
-  getPanelController
+  getPanelController,
+  updateReportStatusController
 }

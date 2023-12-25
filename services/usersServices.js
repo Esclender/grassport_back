@@ -24,31 +24,30 @@ async function loginUserWithGoogle ({ body }) {
 
 async function loginSinGoogle ({ body }) {
   const { email, clave } = body
-  const isRegistered = await userSchema.findOne({ email, clave }).exec()
+  const isUser = await userSchema.findOne({ email, clave }).exec()
+  const isAdmin = await adminSchema.findOne({ email, clave }).exec()
 
-  if (!isRegistered) throw Error('Correo no registrado')
+  const isRegistered = isUser ?? isAdmin
 
-  // get image url FOR 24 HOURS
-  const bucket = admin.storage().bucket()
-  const destinationFolder = 'usuarios'
-
-  const fileToUpload = bucket.file(`${destinationFolder}/${isRegistered.ref}`)
-
-  const url = await getImagePublicUrl(fileToUpload)
-
-  if (!isRegistered) throw Error('No registrado')
-
-  await userSchema.updateOne({ email }, { $inc: { conteo_ingresos: 1 } })
-  const isAdmin = await adminSchema.findOne({ email }).exec()
-  const { nombre, auth } = isRegistered._doc
+  const { nombre, auth } = isRegistered?._doc
 
   if (!auth) throw Error('Correo no registrado')
 
-  // LOGIC TO CHECK IF HE IS AN ADMIN OR EDITOR
-  const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
-  return { token }
+  if (isRegistered) {
+    // get image url FOR 24 HOURS
+    const bucket = admin.storage().bucket()
+    const destinationFolder = 'usuarios'
+
+    const fileToUpload = bucket.file(`${destinationFolder}/${isRegistered.ref}`)
+
+    const url = await getImagePublicUrl(fileToUpload)
+
+    const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
+    return { token }
+  }
 }
 
+// TODO: THE SMS MUST BE SENT RIGHT NOW IS JUST A SIMULATION
 async function registroUsuario ({ body, image }) { // REGISTRO
   const { email, nombre, numero } = body
   const isCreated = await userSchema.findOne({ email }).exec()
@@ -311,7 +310,8 @@ async function reportProblem ({ user, file, body }) {
       ...findReport[0],
       ...body,
       ref: fileName,
-      fecha_creacion: Date.now()
+      fecha_creacion: Date.now(),
+      status: 0
     }
     const problemToMongo = reportSchema(reportCreated)
 
@@ -327,10 +327,6 @@ async function reportProblem ({ user, file, body }) {
   }
 }
 
-async function updateProblemStatus ({ user, idReport }) {
-
-}
-
 module.exports = {
   loginUserWithGoogle,
   userData,
@@ -342,6 +338,5 @@ module.exports = {
   loginSinGoogle,
   registroUsuario,
   completedRegister,
-  deleteFavorite,
-  updateProblemStatus
+  deleteFavorite
 }

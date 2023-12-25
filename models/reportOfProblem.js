@@ -4,7 +4,7 @@ const db = require('../helpers/db')
 const reportSchema = new db.Schema({
   nombre: { type: String },
   apellido: { type: String },
-  comment: { type: String },
+  comentario: { type: String },
   status: { type: Number },
   numero: { type: String },
   email: { type: String, required: true, unique: false },
