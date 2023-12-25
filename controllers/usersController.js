@@ -45,6 +45,7 @@ async function loginUserSinGoogleController (req, res) {
 async function registerUserController (req, res) {
   try {
     const { body, file } = req
+    console.log(file)
     const data = await usersServices.registroUsuario({ body, image: file })
 
     return res.json({

@@ -8,6 +8,7 @@ const path = require('path')
 const getImagePublicUrl = require('../utils/retrieveImageFromSto')
 const { generateToken } = require('../utils/jwt')
 const { sendCodeEmail } = require('../utils/authCheck')
+const { uploadImage, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
 
 async function loginUserWithGoogle ({ body }) {
   const { email } = body
@@ -54,24 +55,26 @@ async function registroUsuario ({ body, image }) { // REGISTRO
   const isAdminOrEditor = await adminSchema.findOne({ email }).exec()
 
   if (isAdminOrEditor) throw Error('Correo registrado')
+  if (isCreated?.auth) throw Error('Correo registrado')
 
   const fileName = image == null ? 'profile-ddefault.png' : Date.now() + path.extname(image.originalname)
 
-  if (!isCreated?.auth) {
+  if (!isCreated?.auth && isCreated != null) {
     await userSchema.deleteOne({ email })
+
+    if (isCreated?.ref != 'profile-ddefault.png') {
+      await deleteImageFirebase({
+        imageRoute: `usuarios/${isCreated?.ref}`
+      })
+    }
   } else {
     throw Error('Email ya registrado')
   }
 
   if (image) {
-    const bucket = admin.storage().bucket()
-
-    const fileToUpload = bucket.file(`usuarios/${fileName}`)
-
-    await fileToUpload.save(image.buffer, {
-      metadata: {
-        contentType: image.mimetype
-      }
+    await uploadImage({
+      imageRoute: `usuarios/${fileName}`,
+      image
     })
   }
 
@@ -86,9 +89,9 @@ async function registroUsuario ({ body, image }) { // REGISTRO
     fecha_ultimo_ingreso: Date.now()
   })
 
-  const verificationCode = await sendCodeEmail({ to: `+51${numero}` })
-
   await usuario.save()
+
+  const verificationCode = 8888// await sendCodeEmail({ to: `+51${numero}` })
 
   return {
     verificationCode,
