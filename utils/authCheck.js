@@ -8,8 +8,8 @@ function sendCodeEmail ({ to }) {
 
     client.messages
       .create({
-        body: 'Tu codigo de verificacion de grassport',
-        from: '+15017122661',
+        body: `Tu codigo de verificacion de grassport es: ${code}`,
+        from: '+19284517232',
         to
       })
       .then(message => resolve(code))

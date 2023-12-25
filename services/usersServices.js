@@ -49,7 +49,7 @@ async function loginSinGoogle ({ body }) {
 }
 
 async function registroUsuario ({ body, image }) { // REGISTRO
-  const { email, nombre } = body
+  const { email, nombre, numero } = body
   const isCreated = await userSchema.findOne({ email }).exec()
   const isAdminOrEditor = await adminSchema.findOne({ email }).exec()
 
@@ -86,7 +86,7 @@ async function registroUsuario ({ body, image }) { // REGISTRO
     fecha_ultimo_ingreso: Date.now()
   })
 
-  const verificationCode = await sendCodeEmail({ to: email })
+  const verificationCode = await sendCodeEmail({ to: `+51${numero}` })
 
   await usuario.save()
 
