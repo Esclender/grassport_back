@@ -57,11 +57,11 @@ async function registroUsuario ({ body, image }) { // REGISTRO
 
   const fileName = image == null ? 'profile-ddefault.png' : Date.now() + path.extname(image.originalname)
 
-  if (isCreated?.isGoogleAuth) {
+  if (!isCreated?.auth) {
     await userSchema.deleteOne({ email })
+  } else {
+    throw Error('Email ya registrado')
   }
-
-  if (!isCreated?.isGoogleAuth && isCreated?.auth) throw Error('Email ya registrado')
 
   if (image) {
     const bucket = admin.storage().bucket()
