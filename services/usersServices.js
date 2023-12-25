@@ -61,7 +61,7 @@ async function registroUsuario ({ body, image }) { // REGISTRO
     await userSchema.deleteOne({ email })
   }
 
-  if (!isCreated?.isGoogleAuth && isCreated != null) throw Error('Email ya registrado')
+  if (!isCreated?.isGoogleAuth && isCreated?.auth) throw Error('Email ya registrado')
 
   if (image) {
     const bucket = admin.storage().bucket()
