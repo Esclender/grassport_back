@@ -20,7 +20,23 @@ async function uploadImage ({ imageRoute, image }) {
   })
 }
 
+async function getSignedUlrImg ({ route }) {
+  const bucket = admin.storage().bucket()
+
+  const fileToUpload = bucket.file(route)
+  const expirationDate = new Date()
+  expirationDate.setDate(expirationDate.getDate() + 1)
+
+  const [url] = await fileToUpload.getSignedUrl({
+    action: 'read',
+    expires: expirationDate.toISOString()
+  })
+
+  return url
+}
+
 module.exports = {
   deleteImageFirebase,
-  uploadImage
+  uploadImage,
+  getSignedUlrImg
 }
