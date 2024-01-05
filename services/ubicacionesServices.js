@@ -1,6 +1,6 @@
 const { default: axios } = require('axios')
 const History = require('../models/userHistory')
-const CommentSchema = require('../models/comments')
+
 const CanchasSchema = require('../models/cancha')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const findPostedCanchasNearbyLocations = require('../utils/haversineFormule')
@@ -42,7 +42,7 @@ async function getGeolocation ({ latitude, longitude }) {
   })
 }
 
-async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword = 'cancha, grass' }) {
+async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword = 'cancha, grass' }) {
   let Response = []
   let canchasPostedData = await CanchasSchema.aggregate(
     [
@@ -62,44 +62,20 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
     ]
   )
 
-  if (canchasPostedData.length > 0) {
-    const locationsFinded = findPostedCanchasNearbyLocations({
-      myLat: latitude,
-      myLon: longitude,
-      locations: canchasPostedData,
-      radius: 200
-    })
+  const locationsFinded = findPostedCanchasNearbyLocations({
+    myLat: latitude,
+    myLon: longitude,
+    locations: canchasPostedData,
+    radius: 200
+  })
 
+  if (locationsFinded.length > 0) {
     const data = await Promise.all(
       locationsFinded.map(async (cancha) => {
         const { ref, place_id, ...rest } = cancha
-        console.log(place_id)
-        const commentsArray = await CommentSchema.aggregate(
-          [
-            {
-              $match: {
-                place_id
-              }
-            },
-            {
-              $project: {
-                __v: 0
-              }
-            },
-            {
-              $addFields: {
-                id: '$_id'
-              }
-            },
-            {
-              $unset: '_id'
-            }
-          ]
-        )
-        console.log(commentsArray, 'comments')
 
         const url = await getSignedUlrImg({ route: `canchas/${ref}` })
-        const comments = await getCommentsArray({ data: commentsArray })
+        const comments = await getCommentsArray({ place_id, isPostedCanchas: true })
 
         return {
           ...rest,
@@ -133,7 +109,9 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
         const photoR = photos != undefined ? photos[0].photo_reference : null
         const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
 
-        const comments = await getCommentsArray({ placeId: place_id })
+        console.log(place_id)
+
+        const comments = await getCommentsArray({ place_id })
 
         return {
           location: {

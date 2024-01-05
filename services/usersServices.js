@@ -6,26 +6,26 @@ const reportSchema = require('../models/reportOfProblem')
 const notificacionsSchema = require('../models/notificacions')
 const admin = require('../firebase/admin')
 const path = require('path')
-const getImagePublicUrl = require('../utils/retrieveImageFromSto')
 const CommentSchema = require('../models/comments')
 const CanchaSchema = require('../models/cancha')
 const { mongo } = require('../helpers/db')
 const { generateToken } = require('../utils/jwt')
-const { uploadImage, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
+const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
 const saveGoogleUserImg = require('../utils/downloadImgFromUrl')
 const timeAgo = require('../utils/time_ago')
 
 // const { sendCodeEmail } = require('../utils/authCheck')
 async function loginUserWithGoogle ({ body }) {
   const { email } = body
-
+  const isUser = await userSchema.findOne({ email }).exec()
   const isAdmin = await adminSchema.findOne({ email }).exec()
 
-  const token = generateToken({ ...body, isAdmin: isAdmin != null })
+  const userType = isUser ?? isAdmin
+  const { nombre } = userType?._doc
 
-  return {
-    token
-  }
+  const url = await getSignedUlrImg({ route: `${isAdmin ? 'admins' : 'usuarios'}/${userType.ref}` })
+  const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
+  return { token }
 }
 
 async function loginSinGoogle ({ body }) {
@@ -33,61 +33,32 @@ async function loginSinGoogle ({ body }) {
   const isUser = await userSchema.findOne({ email, clave }).exec()
   const isAdmin = await adminSchema.findOne({ email, clave }).exec()
 
-  const isRegistered = isUser ?? isAdmin
+  const userType = isUser ?? isAdmin
+  const { nombre } = userType?._doc
 
-  const { nombre, auth } = isRegistered?._doc
-
-  if (!auth) throw Error('Correo no registrado')
-
-  if (isRegistered) {
-    // get image url FOR 24 HOURS
-    const bucket = admin.storage().bucket()
-    const destinationFolder = 'usuarios'
-
-    const fileToUpload = bucket.file(`${destinationFolder}/${isRegistered.ref}`)
-
-    const url = await getImagePublicUrl(fileToUpload)
-
-    const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
-    return { token }
-  }
+  const url = await getSignedUlrImg({ route: `${isAdmin ? 'admins' : 'usuarios'}/${userType.ref}` })
+  const token = generateToken({ email, nombre, photoURL: url, isAdmin: isAdmin != null })
+  return { token }
 }
 
 // TODO: THE SMS MUST BE SENT RIGHT NOW IS JUST A SIMULATION
 async function registroUsuario ({ body, image }) { // REGISTRO
-  const { email, nombre } = body
-  const isCreated = await userSchema.findOne({ email }).exec()
-  const isAdminOrEditor = await adminSchema.findOne({ email }).exec()
+  const { nombre } = body
 
-  if (isAdminOrEditor) throw Error('Correo registrado')
-  if (isCreated?.auth) throw Error('Correo registrado')
+  if (!image) throw Error('Imagen requerida')
 
-  const fileName = image == null ? 'profile-ddefault.png' : Date.now() + path.extname(image.originalname)
+  const fileName = Date.now() + path.extname(image.originalname)
 
-  if (!isCreated?.auth && isCreated != null) {
-    await userSchema.deleteOne({ email })
-
-    if (isCreated?.ref != 'profile-ddefault.png') {
-      await deleteImageFirebase({
-        imageRoute: `usuarios/${isCreated?.ref}`
-      })
-    }
-  } else {
-    throw Error('Email ya registrado')
-  }
-
-  if (image) {
-    await uploadImage({
-      imageRoute: `usuarios/${fileName}`,
-      image
-    })
-  }
+  await uploadImage({
+    imageRoute: `usuarios/${fileName}`,
+    image
+  })
 
   const usuario = userSchema({
     ...body,
     nombre_minuscula: nombre.toLowerCase(),
     isGoogleAuth: false,
-    conteo_ingresos: isCreated?._doc?.conteo_ingresos ?? 0,
+    conteo_ingresos: 0,
     ref: fileName,
     fecha_creacion: Date.now(),
     auth: false,
@@ -334,29 +305,43 @@ async function reportProblem ({ user, file, body }) {
 }
 
 async function saveComment ({ body, jwt, isReply = 'false' }) {
-  const { nombre, email, photoURL } = jwt
+  const { nombre, email, photoURL, isGoogleCancha } = jwt
   const { comentario, place_id, commentToReply } = body
 
-  const user = await userSchema.findOne({ email }).exec() ?? {}
+  const user = await userSchema.findOne({ email }).exec()
 
-  if (!user?.ref) {
-    user.ref = await saveGoogleUserImg({ urlToRetrieve: photoURL })
-  }
+  user.ref = await saveGoogleUserImg({ urlToRetrieve: photoURL })
 
-  const isOwner = await CanchaSchema.findOne({
-    _id: new mongo.ObjectId(place_id),
-    ownerEmail: email
+  const commentObject = await new Promise((resolve, reject) => {
+    if (isGoogleCancha) {
+      console.log(user)
+      resolve({
+        nombre,
+        comentario,
+        replies: [],
+        ref: user?.ref,
+        place_id,
+        fecha_publicado: Date.now(),
+        isOwner: false
+      })
+    } else {
+      CanchaSchema.findOne({
+        _id: new mongo.ObjectId(place_id),
+        ownerEmail: email
+      })
+        .then((isOwner) => {
+          resolve({
+            nombre,
+            comentario,
+            replies: [],
+            ref: user?.ref,
+            place_id,
+            fecha_publicado: Date.now(),
+            isOwner: isOwner != null && isOwner != undefined
+          })
+        })
+    }
   })
-
-  const commentObject = {
-    nombre,
-    comentario,
-    replies: [],
-    ref: user?.ref,
-    place_id,
-    fecha_publicado: Date.now(),
-    isOwner: isOwner != null && isOwner != undefined
-  }
 
   try {
     if (!JSON.parse(isReply)) {
