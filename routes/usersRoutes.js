@@ -21,7 +21,7 @@ const { updateNotificationAlertComments } = require('../middlewares/updateNotifi
 
 router.post('/', [isUserRegistered, isCreated], usuarioControllers.loginUserWithGoogleController)
 router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
-router.post('/registro', [isAlreadyRegistered, upload.single('image')], usuarioControllers.registerUserController)
+router.post('/registro', [upload.single('image'), isAlreadyRegistered], usuarioControllers.registerUserController)
 router.post('/registro/completado', usuarioControllers.completedRegisterController)
 
 // REQ AUTH

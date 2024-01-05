@@ -1,5 +1,6 @@
 const userSchema = require('../models/user')
 const adminSchema = require('../models/admins')
+const { deleteImageFirebase } = require('../utils/firebaseStorageUtils')
 
 async function isAlreadyRegistered (req, res, next) {
   const { email } = req.body
@@ -13,8 +14,11 @@ async function isAlreadyRegistered (req, res, next) {
     })
   }
 
-  if (!isCreated?.auth) {
-    await userSchema.deleteOne({ email })
+  if (!isCreated?.auth && isCreated != null) {
+    await deleteImageFirebase({
+      imageRoute: `usuarios/${isCreated.ref}`
+    })
+    await userSchema.deleteOne({ email }).exec()
   }
 
   next()
