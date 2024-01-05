@@ -7,14 +7,14 @@ async function isUserRegistered (req, res, next) {
   const isAdmin = await adminSchema.findOne({ email }).exec()
 
   if (isCreated == null && isAdmin == null) {
-    return res.json({
+    return res.status(400).json({
       exitoso: false,
       message: 'Correo no registrado'
     })
   }
 
   if (!isCreated.auth) {
-    return res.json({
+    return res.status(400).json({
       exitoso: false,
       message: 'Correo no registrado'
     })
