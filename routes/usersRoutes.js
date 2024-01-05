@@ -8,6 +8,7 @@ const upload = multer({ storage })
 
 const isCreated = require('../middlewares/isEmailCreated')
 const isUserRegistered = require('../middlewares/isUserRegistered')
+const isAlreadyRegistered = require('../middlewares/isAlreadyRegistered')
 const updateLastIngreso = require('../middlewares/updateLastIngreso')
 const isAuth = require('../middlewares/isAuth')
 
@@ -15,12 +16,12 @@ const isAuth = require('../middlewares/isAuth')
 const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 const canchaControllers = require('../controllers/canchasController')
-
+const isGoogleCancha = require('../middlewares/isObjectId')
 const { updateNotificationAlertComments } = require('../middlewares/updateNotifications')
 
-router.post('/', [isCreated], usuarioControllers.loginUserWithGoogleController)
+router.post('/', [isUserRegistered, isCreated], usuarioControllers.loginUserWithGoogleController)
 router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
-router.post('/registro', [upload.single('image')], usuarioControllers.registerUserController)
+router.post('/registro', [isAlreadyRegistered, upload.single('image')], usuarioControllers.registerUserController)
 router.post('/registro/completado', usuarioControllers.completedRegisterController)
 
 // REQ AUTH
@@ -35,7 +36,7 @@ router.get('/mis-datos/favoritos', [isAuth, mustBeAuthenticated], usuarioControl
 
 router.post('/report', [isAuth, mustBeAuthenticated, upload.single('image')], usuarioControllers.reportProblemController)
 
-router.post('/comment', [isAuth, mustBeAuthenticated, updateNotificationAlertComments], usuarioControllers.postNewComment)
+router.post('/comment', [isAuth, mustBeAuthenticated, isGoogleCancha, updateNotificationAlertComments], usuarioControllers.postNewComment)
 
 router.get('/notifications', [isAuth, mustBeAuthenticated], usuarioControllers.getUserNotifications)
 

@@ -1,6 +1,7 @@
 const NotificationSchema = require('../models/notificacions')
 const Canchas = require('../models/cancha')
 const Report = require('../models/reportOfProblem')
+const { mongo } = require('../helpers/db')
 
 async function updateNotificationAlertReport (req, res, next) {
   const { id_reporte } = req.params
@@ -24,23 +25,31 @@ async function updateNotificationAlertReport (req, res, next) {
 
 async function updateNotificationAlertComments (req, res, next) {
   const { body, jwt } = req
-  const { place_id } = body
 
-  const cancha = await Canchas.findById(place_id).exec()
+  if (!jwt.isGoogleCancha) {
+    console.log('update')
+    const { place_id } = body
 
-  if (cancha) {
-    const newNotification = NotificationSchema({
-      author: jwt.nombre,
-      razon: 'Realizo un comentario',
-      seccion: 'Tus Canchas',
-      fecha_publicado: Date.now(),
-      isNuevo: true,
-      route: 1,
-      email: cancha.ownerEmail,
-      id_cancha: place_id
-    })
+    const cancha = await Canchas.findOne({
+      _id: new mongo.ObjectId(place_id)
+    }).exec()
 
-    await newNotification.save()
+    console.log(cancha)
+
+    if (cancha && cancha.ownerEmail != jwt.email) {
+      const newNotification = NotificationSchema({
+        author: jwt.nombre,
+        razon: 'Realizo un comentario',
+        seccion: 'Tus Canchas',
+        fecha_publicado: Date.now(),
+        isNuevo: true,
+        route: 1,
+        email: cancha.ownerEmail,
+        id_cancha: place_id
+      })
+
+      await newNotification.save()
+    }
   }
 
   next()

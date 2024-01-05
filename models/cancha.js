@@ -6,7 +6,8 @@ const canchaSchema = new db.Schema({
   ownerEmail: { type: String, required: true },
   name: { type: String, required: true },
   address: { type: String, required: true },
-  isOpen: { type: Boolean },
+  rating: { type: Number, required: true },
+  isOpen: { type: Boolean, required: true },
   description: { type: String },
   location: {
     lat: { type: Number, required: true },

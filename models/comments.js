@@ -7,8 +7,8 @@ const commentSchema = new db.Schema({
   ref: { type: String, required: true },
   fecha_publicado: { type: Date, required: true },
   replies: { type: Array, required: true },
-  isOwner: { type: String, required: true },
-  place_id: { type: db.Schema.Types.ObjectId, required: true },
+  isOwner: { type: Boolean, required: true },
+  place_id: { type: String, required: true },
   isGoogleAuth: { type: Boolean }
 })
 

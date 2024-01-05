@@ -1,26 +1,23 @@
 const userSchema = require('../models/user')
 const adminSchema = require('../models/admins')
 
-async function isUserRegistered (req, res, next) {
+async function isAlreadyRegistered (req, res, next) {
   const { email } = req.body
   const isCreated = await userSchema.findOne({ email }).exec()
   const isAdmin = await adminSchema.findOne({ email }).exec()
 
-  if (isCreated == null && isAdmin == null) {
+  if ((isCreated && isCreated?.auth) || isAdmin) {
     return res.json({
       exitoso: false,
-      message: 'Correo no registrado'
+      message: 'Correo ya registrado'
     })
   }
 
-  if (!isCreated.auth) {
-    return res.json({
-      exitoso: false,
-      message: 'Correo no registrado'
-    })
+  if (!isCreated?.auth) {
+    await userSchema.deleteOne({ email })
   }
 
   next()
 }
 
-module.exports = isUserRegistered
+module.exports = isAlreadyRegistered

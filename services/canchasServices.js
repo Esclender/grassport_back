@@ -22,7 +22,9 @@ async function saveCanchaPostedData ({ body, image, jwt }) {
     location: JSON.parse(location),
     ref: fileName,
     ownerEmail: email,
-    ownerName: nombre
+    ownerName: nombre,
+    rating: 5,
+    isOpen: false
   })
 
   await saveInMongo.save()
