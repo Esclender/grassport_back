@@ -3,13 +3,19 @@ const adminSchema = require('../models/admins')
 const historySchema = require('../models/userHistory')
 const favoriteSchema = require('../models/favorite')
 const reportSchema = require('../models/reportOfProblem')
+const notificacionsSchema = require('../models/notificacions')
 const admin = require('../firebase/admin')
 const path = require('path')
 const getImagePublicUrl = require('../utils/retrieveImageFromSto')
+const CommentSchema = require('../models/comments')
+const CanchaSchema = require('../models/cancha')
+const { mongo } = require('../helpers/db')
 const { generateToken } = require('../utils/jwt')
-const { sendCodeEmail } = require('../utils/authCheck')
 const { uploadImage, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
+const saveGoogleUserImg = require('../utils/downloadImgFromUrl')
+const timeAgo = require('../utils/time_ago')
 
+// const { sendCodeEmail } = require('../utils/authCheck')
 async function loginUserWithGoogle ({ body }) {
   const { email } = body
 
@@ -49,7 +55,7 @@ async function loginSinGoogle ({ body }) {
 
 // TODO: THE SMS MUST BE SENT RIGHT NOW IS JUST A SIMULATION
 async function registroUsuario ({ body, image }) { // REGISTRO
-  const { email, nombre, numero } = body
+  const { email, nombre } = body
   const isCreated = await userSchema.findOne({ email }).exec()
   const isAdminOrEditor = await adminSchema.findOne({ email }).exec()
 
@@ -327,6 +333,108 @@ async function reportProblem ({ user, file, body }) {
   }
 }
 
+async function saveComment ({ body, jwt, isReply = 'false' }) {
+  const { nombre, email, photoURL } = jwt
+  const { comentario, place_id, commentToReply } = body
+
+  const user = await userSchema.findOne({ email }).exec() ?? {}
+
+  if (!user?.ref) {
+    user.ref = await saveGoogleUserImg({ urlToRetrieve: photoURL })
+  }
+
+  const isOwner = await CanchaSchema.findOne({
+    _id: new mongo.ObjectId(place_id),
+    ownerEmail: email
+  })
+
+  const commentObject = {
+    nombre,
+    comentario,
+    replies: [],
+    ref: user?.ref,
+    place_id,
+    fecha_publicado: Date.now(),
+    isOwner: isOwner != null && isOwner != undefined
+  }
+
+  try {
+    if (!JSON.parse(isReply)) {
+      const commentToSave = CommentSchema(commentObject)
+      await commentToSave.save()
+    } else {
+      await CommentSchema.updateOne({
+        _id: new mongo.ObjectId(commentToReply),
+        place_id
+      },
+      {
+        $push: { replies: commentObject }
+      }
+      )
+    }
+  } catch {
+    const commentToSave = CommentSchema(commentObject)
+    await commentToSave.save()
+  }
+}
+
+async function getNotifications ({
+  jwt
+}) {
+  const { email } = jwt
+
+  const notifications = await notificacionsSchema.aggregate(
+    [
+      {
+        $match: {
+          email
+        }
+      },
+      {
+        $lookup: {
+          from: 'canchas',
+          localField: 'id_cancha',
+          foreignField: '_id',
+          as: 'dataCancha'
+        }
+      },
+      {
+        $lookup: {
+          from: 'reportes-problemas',
+          localField: 'id_reporte',
+          foreignField: '_id',
+          as: 'dataReporte'
+        }
+      },
+      {
+        $addFields: {
+          id: '$_id'
+        }
+      },
+      {
+
+        $project: {
+          __v: 0,
+          _id: 0
+        }
+      }
+    ]
+  )
+
+  const notificationsMapped = notifications.map((noti) => {
+    const { fecha_publicado, ...rest } = noti
+
+    return {
+      ...rest,
+      tiempo_publicado: timeAgo(fecha_publicado)
+    }
+  })
+
+  await notificacionsSchema.updateMany({ email }, { isNuevo: false })
+
+  return notificationsMapped
+}
+
 module.exports = {
   loginUserWithGoogle,
   userData,
@@ -338,5 +446,7 @@ module.exports = {
   loginSinGoogle,
   registroUsuario,
   completedRegister,
-  deleteFavorite
+  deleteFavorite,
+  saveComment,
+  getNotifications
 }

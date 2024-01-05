@@ -1,6 +1,11 @@
 const { default: axios } = require('axios')
 const History = require('../models/userHistory')
+const CommentSchema = require('../models/comments')
+const CanchasSchema = require('../models/cancha')
 const { Client } = require('@googlemaps/google-maps-services-js')
+const findPostedCanchasNearbyLocations = require('../utils/haversineFormule')
+const { getSignedUlrImg } = require('../utils/firebaseStorageUtils')
+const { getCommentsArray } = require('../utils/canchasUtils')
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
@@ -38,6 +43,76 @@ async function getGeolocation ({ latitude, longitude }) {
 }
 
 async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword = 'cancha, grass' }) {
+  let Response = []
+  let canchasPostedData = await CanchasSchema.aggregate(
+    [
+      {
+        $project: {
+          __v: 0
+        }
+      },
+      {
+        $addFields: {
+          place_id: '$_id'
+        }
+      },
+      {
+        $unset: '_id'
+      }
+    ]
+  )
+
+  if (canchasPostedData.length > 0) {
+    const locationsFinded = findPostedCanchasNearbyLocations({
+      myLat: latitude,
+      myLon: longitude,
+      locations: canchasPostedData,
+      radius: 200
+    })
+
+    const data = await Promise.all(
+      locationsFinded.map(async (cancha) => {
+        const { ref, place_id, ...rest } = cancha
+        console.log(place_id)
+        const commentsArray = await CommentSchema.aggregate(
+          [
+            {
+              $match: {
+                place_id
+              }
+            },
+            {
+              $project: {
+                __v: 0
+              }
+            },
+            {
+              $addFields: {
+                id: '$_id'
+              }
+            },
+            {
+              $unset: '_id'
+            }
+          ]
+        )
+        console.log(commentsArray, 'comments')
+
+        const url = await getSignedUlrImg({ route: `canchas/${ref}` })
+        const comments = await getCommentsArray({ data: commentsArray })
+
+        return {
+          ...rest,
+          photoURL: url,
+          comments,
+          place_id
+        }
+      })
+    )
+
+    Response.push(...data)
+  }
+
   try {
     const response = await client.placesNearby({
       params: {
@@ -52,34 +127,34 @@ async function getNearbyLocations ({ latitude, longitude, radius = 1000, keyword
       }
     })
 
-    const nearbyLocations = response.data.results.map((location) => {
-      client.placeDetails({
-        params: {
-          key: process.env.GOOGLE_MAPS_API_KEY,
-          place_id: location.place_id,
-          language: 'es'
+    const nearbyLocations = await Promise.all(
+      response.data.results.map(async (location) => {
+        const { geometry, name, vicinity, rating, opening_hours, photos, place_id } = location
+        const photoR = photos != undefined ? photos[0].photo_reference : null
+        const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
+
+        const comments = await getCommentsArray({ placeId: place_id })
+
+        return {
+          location: {
+            latitude: geometry.location.lat,
+            longitude: geometry.location.lng
+          },
+          name,
+          address: vicinity,
+          rating: Math.round(rating),
+          isOpen: opening_hours?.open_now ?? null,
+          photoURL: photoR != null ? url : defaultImg,
+          place_id,
+          comments
+
         }
+      })
+    )
 
-      }).then((r) => console.log(r.data, 'DETAILS'))
+    Response.push(...nearbyLocations)
 
-      const { geometry, name, vicinity, rating, opening_hours, photos } = location
-      const photoR = photos != undefined ? photos[0].photo_reference : null
-      const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
-
-      return {
-        location: {
-          latitude: geometry.location.lat,
-          longitude: geometry.location.lng
-        },
-        name,
-        address: vicinity,
-        rating: Math.round(rating),
-        isOpen: opening_hours?.open_now ?? null,
-        photoURL: photoR != null ? url : defaultImg
-      }
-    })
-
-    return nearbyLocations
+    return Response
   } catch (error) {
     console.error('Error fetching nearby locations:', error.message)
     throw error
@@ -133,7 +208,7 @@ async function searchCanchasLocations ({ nombre, userToken }) {
 
 async function saveHistoryLocation ({ data, userToken }) {
   const isSaved = await History.findOne({ street: data.street, emailUsuario: userToken?.email }).exec()
-  console.log(isSaved)
+
   if (!isSaved) {
     const mappedData = new History({
       ...data,
