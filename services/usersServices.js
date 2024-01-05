@@ -3,17 +3,19 @@ const adminSchema = require('../models/admins')
 const historySchema = require('../models/userHistory')
 const favoriteSchema = require('../models/favorite')
 const reportSchema = require('../models/reportOfProblem')
+const notificacionsSchema = require('../models/notificacions')
 const admin = require('../firebase/admin')
 const path = require('path')
 const getImagePublicUrl = require('../utils/retrieveImageFromSto')
-const { generateToken } = require('../utils/jwt')
-// const { sendCodeEmail } = require('../utils/authCheck')
-const { uploadImage, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
 const CommentSchema = require('../models/comments')
 const CanchaSchema = require('../models/cancha')
 const { mongo } = require('../helpers/db')
+const { generateToken } = require('../utils/jwt')
+const { uploadImage, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
 const saveGoogleUserImg = require('../utils/downloadImgFromUrl')
+const timeAgo = require('../utils/time_ago')
 
+// const { sendCodeEmail } = require('../utils/authCheck')
 async function loginUserWithGoogle ({ body }) {
   const { email } = body
 
@@ -376,6 +378,63 @@ async function saveComment ({ body, jwt, isReply = 'false' }) {
   }
 }
 
+async function getNotifications ({
+  jwt
+}) {
+  const { email } = jwt
+
+  const notifications = await notificacionsSchema.aggregate(
+    [
+      {
+        $match: {
+          email
+        }
+      },
+      {
+        $lookup: {
+          from: 'canchas',
+          localField: 'id_cancha',
+          foreignField: '_id',
+          as: 'dataCancha'
+        }
+      },
+      {
+        $lookup: {
+          from: 'reportes-problemas',
+          localField: 'id_reporte',
+          foreignField: '_id',
+          as: 'dataReporte'
+        }
+      },
+      {
+        $addFields: {
+          id: '$_id'
+        }
+      },
+      {
+
+        $project: {
+          __v: 0,
+          _id: 0
+        }
+      }
+    ]
+  )
+
+  const notificationsMapped = notifications.map((noti) => {
+    const { fecha_publicado, ...rest } = noti
+
+    return {
+      ...rest,
+      tiempo_publicado: timeAgo(fecha_publicado)
+    }
+  })
+
+  await notificacionsSchema.updateMany({ email }, { isNuevo: false })
+
+  return notificationsMapped
+}
+
 module.exports = {
   loginUserWithGoogle,
   userData,
@@ -388,5 +447,6 @@ module.exports = {
   registroUsuario,
   completedRegister,
   deleteFavorite,
-  saveComment
+  saveComment,
+  getNotifications
 }

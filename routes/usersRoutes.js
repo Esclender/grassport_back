@@ -16,6 +16,8 @@ const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 const canchaControllers = require('../controllers/canchasController')
 
+const { updateNotificationAlertComments } = require('../middlewares/updateNotifications')
+
 router.post('/', [isCreated], usuarioControllers.loginUserWithGoogleController)
 router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
 router.post('/registro', [upload.single('image')], usuarioControllers.registerUserController)
@@ -33,7 +35,9 @@ router.get('/mis-datos/favoritos', [isAuth, mustBeAuthenticated], usuarioControl
 
 router.post('/report', [isAuth, mustBeAuthenticated, upload.single('image')], usuarioControllers.reportProblemController)
 
-router.post('/comment', [isAuth, mustBeAuthenticated], usuarioControllers.postNewComment)
+router.post('/comment', [isAuth, mustBeAuthenticated, updateNotificationAlertComments], usuarioControllers.postNewComment)
+
+router.get('/notifications', [isAuth, mustBeAuthenticated], usuarioControllers.getUserNotifications)
 
 /** *USER PLACE CANCHAS POSTING */
 router.post('/my-place/postCancha', [isAuth, mustBeAuthenticated, upload.single('image')], canchaControllers.postCanchaController)

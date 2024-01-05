@@ -28,6 +28,11 @@ async function getReports () {
   const allReports = await reportSchema.aggregate(
     [
       {
+        $match: {
+          status: 0
+        }
+      },
+      {
         $project: {
           __v: 0
         }

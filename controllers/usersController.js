@@ -251,6 +251,27 @@ async function postNewComment (req, res) {
   }
 }
 
+async function getUserNotifications (req, res) {
+  try {
+    const { jwt } = req
+    const data = await usersServices.getNotifications({ jwt })
+
+    return res.json({
+      exitoso: true,
+      response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   loginUserWithGoogleController,
   userDataController,
@@ -263,5 +284,6 @@ module.exports = {
   registerUserController,
   deleteFavoriteController,
   completedRegisterController,
-  postNewComment
+  postNewComment,
+  getUserNotifications
 }
