@@ -67,12 +67,14 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
   if (locationsFinded.length > 0) {
     const data = await Promise.all(
       locationsFinded.map(async (cancha) => {
-        const { place_id, name, location } = cancha
+        const { place_id, name, location, rating, address } = cancha
 
         return {
           name,
           location,
-          place_id
+          place_id,
+          rating,
+          address
         }
       })
     )
@@ -96,13 +98,15 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
 
     const nearbyLocations = await Promise.all(
       response.data.results.map(async (location) => {
-        const { geometry, name, place_id } = location
+        const { geometry, name, place_id, vicinity, rating } = location
 
         return {
           location: {
             latitude: geometry.location.lat,
             longitude: geometry.location.lng
           },
+          rating: Math.round(rating),
+          address: vicinity,
           name,
           place_id
         }
@@ -145,22 +149,23 @@ async function findByAddress ({ address, userToken }) {
 }
 
 async function searchCanchasLocations ({ nombre, userToken }) {
+  const Response = []
   const mapsPlacesEndpoint = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nombre}+cancha+Lima,Peru&key=${process.env.GOOGLE_MAPS_API_KEY}`
   const responseApi = await axios.get(mapsPlacesEndpoint)
 
-  const locationsArray = responseApi.data.results.map((res) => {
-    const { formatted_address, name, geometry } = res
+  responseApi.data.results.forEach((res) => {
+    const { formatted_address, name, geometry, place_id } = res
 
-    return {
+    Response.push({
       leading: 'place',
       street: formatted_address,
       locality: name,
       location: geometry.location,
-      emailUsuario: userToken?.email ?? null
-    }
+      place_id
+    })
   })
 
-  return locationsArray
+  return Response
 }
 
 async function saveHistoryLocation ({ data, userToken }) {

@@ -14,6 +14,10 @@ const favoriteSchema = new db.Schema({
     type: String,
     required: true
   },
+  place_id: {
+    type: String,
+    required: true
+  },
   leading: {
     type: String,
     required: true

@@ -314,7 +314,6 @@ async function saveComment ({ body, jwt, isReply = 'false' }) {
 
   const commentObject = await new Promise((resolve, reject) => {
     if (isGoogleCancha) {
-      console.log(user)
       resolve({
         nombre,
         comentario,
