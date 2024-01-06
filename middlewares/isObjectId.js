@@ -6,8 +6,6 @@ async function isGoogleCancha (req, res, next) {
   const { jwt, body } = req
   const { place_id } = body
 
-  console.log(moongose.Types.ObjectId.isValid(place_id))
-
   if (moongose.Types.ObjectId.isValid(place_id)) {
     jwt.isGoogleCancha = false
   } else {
@@ -16,4 +14,20 @@ async function isGoogleCancha (req, res, next) {
   next()
 }
 
-module.exports = isGoogleCancha
+async function isDetailedGoogleCancha (req, res, next) {
+  const { params } = req
+  const { id_cancha } = params
+  req.jwt = {}
+
+  if (moongose.Types.ObjectId.isValid(id_cancha)) {
+    req.jwt.isGoogleCancha = false
+  } else {
+    req.jwt.isGoogleCancha = true
+  }
+  next()
+}
+
+module.exports = {
+  isGoogleCancha,
+  isDetailedGoogleCancha
+}

@@ -402,11 +402,32 @@ async function getNotifications ({
           __v: 0,
           _id: 0
         }
+      },
+      {
+        $facet: {
+          nuevasNotificaciones: [
+            {
+              $match: {
+                isNuevo: true
+              }
+            }
+          ],
+          allNotificaciones: []
+        }
       }
     ]
   )
 
-  const notificationsMapped = notifications.map((noti) => {
+  const nuevasNotificaciones = notifications[0].nuevasNotificaciones.map((noti) => {
+    const { fecha_publicado, ...rest } = noti
+
+    return {
+      ...rest,
+      tiempo_publicado: timeAgo(fecha_publicado)
+    }
+  })
+
+  const allNotificaciones = notifications[0].allNotificaciones.map((noti) => {
     const { fecha_publicado, ...rest } = noti
 
     return {
@@ -417,7 +438,11 @@ async function getNotifications ({
 
   await notificacionsSchema.updateMany({ email }, { isNuevo: false })
 
-  return notificationsMapped
+  return {
+    nuevasNotificacionesCount: nuevasNotificaciones.length,
+    nuevasNotificaciones,
+    allNotificaciones
+  }
 }
 
 module.exports = {

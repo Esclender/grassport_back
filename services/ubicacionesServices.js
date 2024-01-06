@@ -4,10 +4,7 @@ const History = require('../models/userHistory')
 const CanchasSchema = require('../models/cancha')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const findPostedCanchasNearbyLocations = require('../utils/haversineFormule')
-const { getSignedUlrImg } = require('../utils/firebaseStorageUtils')
-const { getCommentsArray } = require('../utils/canchasUtils')
 const client = new Client({})
-const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
 async function getGeolocation ({ latitude, longitude }) {
   return new Promise((resolve, reject) => {
@@ -24,8 +21,6 @@ async function getGeolocation ({ latitude, longitude }) {
     client.reverseGeocode(args)
       .then(({ data }) => {
         const adrresses = data.results
-
-        console.log(adrresses)
 
         resolve({
           location: {
@@ -72,15 +67,11 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
   if (locationsFinded.length > 0) {
     const data = await Promise.all(
       locationsFinded.map(async (cancha) => {
-        const { ref, place_id, ...rest } = cancha
-
-        const url = await getSignedUlrImg({ route: `canchas/${ref}` })
-        const comments = await getCommentsArray({ place_id, isPostedCanchas: true })
+        const { place_id, name, location } = cancha
 
         return {
-          ...rest,
-          photoURL: url,
-          comments,
+          name,
+          location,
           place_id
         }
       })
@@ -105,13 +96,7 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
 
     const nearbyLocations = await Promise.all(
       response.data.results.map(async (location) => {
-        const { geometry, name, vicinity, rating, opening_hours, photos, place_id } = location
-        const photoR = photos != undefined ? photos[0].photo_reference : null
-        const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
-
-        console.log(place_id)
-
-        const comments = await getCommentsArray({ place_id })
+        const { geometry, name, place_id } = location
 
         return {
           location: {
@@ -119,13 +104,7 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
             longitude: geometry.location.lng
           },
           name,
-          address: vicinity,
-          rating: Math.round(rating),
-          isOpen: opening_hours?.open_now ?? null,
-          photoURL: photoR != null ? url : defaultImg,
-          place_id,
-          comments
-
+          place_id
         }
       })
     )

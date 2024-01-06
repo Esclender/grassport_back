@@ -16,7 +16,7 @@ const isAuth = require('../middlewares/isAuth')
 const mustBeAuthenticated = require('../middlewares/mustBeAuth')
 const usuarioControllers = require('../controllers/usersController')
 const canchaControllers = require('../controllers/canchasController')
-const isGoogleCancha = require('../middlewares/isObjectId')
+const { isGoogleCancha } = require('../middlewares/isObjectId')
 const { updateNotificationAlertComments } = require('../middlewares/updateNotifications')
 
 router.post('/', [isUserRegistered, isCreated], usuarioControllers.loginUserWithGoogleController)
