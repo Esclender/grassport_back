@@ -10,8 +10,8 @@ const canchaSchema = new db.Schema({
   isOpen: { type: Boolean, required: true },
   description: { type: String },
   location: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true }
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true }
   },
   ref: { type: String, required: true }
 })
