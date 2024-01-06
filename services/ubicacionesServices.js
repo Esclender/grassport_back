@@ -1,6 +1,6 @@
 const { default: axios } = require('axios')
 const History = require('../models/userHistory')
-
+const { getSignedUlrImg } = require('../utils/firebaseStorageUtils')
 const CanchasSchema = require('../models/cancha')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const findPostedCanchasNearbyLocations = require('../utils/haversineFormule')
@@ -67,14 +67,16 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
   if (locationsFinded.length > 0) {
     const data = await Promise.all(
       locationsFinded.map(async (cancha) => {
-        const { place_id, name, location, rating, address } = cancha
+        const { place_id, name, location, rating, address, ref } = cancha
+        const url = await getSignedUlrImg({ route: `canchas/${ref}` })
 
         return {
           name,
           location,
           place_id,
           rating,
-          address
+          address,
+          photoURL: url
         }
       })
     )
@@ -98,7 +100,10 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
 
     const nearbyLocations = await Promise.all(
       response.data.results.map(async (location) => {
-        const { geometry, name, place_id, vicinity, rating } = location
+        const { geometry, name, place_id, vicinity, rating, photos } = location
+
+        const photoR = photos != undefined ? photos[0].photo_reference : null
+        const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoR}&key=AIzaSyDqtTbNkH59t_Ia6vzUGTH7vNAXaeL8g0Q`
 
         return {
           location: {
@@ -108,7 +113,8 @@ async function getNearbyLocations ({ latitude, longitude, radius = 200, keyword 
           rating: Math.round(rating),
           address: vicinity,
           name,
-          place_id
+          place_id,
+          photoURL: url
         }
       })
     )

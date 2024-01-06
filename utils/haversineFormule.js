@@ -27,7 +27,7 @@ function findPostedCanchasNearbyLocations ({ myLat, myLon, locations, radius }) 
   const nearbyLocations = []
 
   for (const place of locations) {
-    const distance = haversine(myLat, myLon, place.location.lat, place.location.lng)
+    const distance = haversine(myLat, myLon, place.location.latitude, place.location.longitude)
     if (distance <= radius) {
       nearbyLocations.push(place)
     }

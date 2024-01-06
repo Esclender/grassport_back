@@ -2,8 +2,8 @@ const CanchasSchema = require('../models/cancha')
 const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const { getCommentsArray } = require('../utils/canchasUtils')
-const path = require('path')
 const { mongo } = require('../helpers/db')
+const path = require('path')
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
