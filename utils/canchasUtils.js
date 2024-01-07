@@ -2,32 +2,32 @@ const CommentSchema = require('../models/comments')
 const { getSignedUlrImg } = require('./firebaseStorageUtils')
 const timeAgo = require('./time_ago')
 
-async function getCommentsArray ({ place_id, isPostedCanchas = false }) {
+async function getCommentsArray ({ place_id, isPostedCanchas = false, replies = [] }) {
   let comments = []
-  const data = await CommentSchema.aggregate(
-    [
-      {
-        $match: {
-          place_id
+  const data = replies.length == 0
+    ? await CommentSchema.aggregate(
+      [
+        {
+          $match: {
+            place_id
+          }
+        },
+        {
+          $project: {
+            __v: 0
+          }
+        },
+        {
+          $addFields: {
+            id: '$_id'
+          }
+        },
+        {
+          $unset: '_id'
         }
-      },
-      {
-        $project: {
-          __v: 0
-        }
-      },
-      {
-        $addFields: {
-          id: '$_id'
-        }
-      },
-      {
-        $unset: '_id'
-      }
-    ]
-  )
-
-  console.log(place_id)
+      ]
+    )
+    : replies
 
   if (data?.length > 0) {
     for (let comment of data) {
@@ -39,7 +39,7 @@ async function getCommentsArray ({ place_id, isPostedCanchas = false }) {
       let repliesArray = []
 
       if (replies.length > 0) {
-        repliesArray = await getCommentsArray({ data: replies })
+        repliesArray = await getCommentsArray({ replies })
       }
 
       const commentObject = {
