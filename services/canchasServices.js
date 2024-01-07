@@ -75,7 +75,7 @@ async function canchasPostedInfo ({ id_cancha }) {
       },
       {
         $addFields: {
-          id: '_id'
+          place_id: '$_id'
         }
       }, {
         $project: {
