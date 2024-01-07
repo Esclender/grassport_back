@@ -88,7 +88,7 @@ async function canchasPostedInfo ({ id_cancha }) {
 
   const { ref, place_id, ...rest } = cancha[0]
   const url = await getSignedUlrImg({ route: `canchas/${ref}` })
-  const comments = await getCommentsArray({ place_id, isPostedCanchas: true })
+  const comments = await getCommentsArray({ place_id: id_cancha, isPostedCanchas: true })
 
   return {
     ...rest,
