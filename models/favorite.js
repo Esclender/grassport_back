@@ -3,8 +3,8 @@ const db = require('../helpers/db')
 
 const favoriteSchema = new db.Schema({
   location: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true }
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true }
   },
   locality: {
     type: String,
