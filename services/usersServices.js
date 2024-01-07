@@ -304,7 +304,7 @@ async function reportProblem ({ user, file, body }) {
 }
 
 async function saveComment ({ body, jwt, isReply = 'false' }) {
-  const { nombre, email, isGoogleCancha } = jwt
+  const { email, isGoogleCancha } = jwt
   const { comentario, place_id, commentToReply } = body
 
   const user = await userSchema.findOne({ email }).exec()
@@ -312,7 +312,7 @@ async function saveComment ({ body, jwt, isReply = 'false' }) {
   const commentObject = await new Promise((resolve, reject) => {
     if (isGoogleCancha) {
       resolve({
-        nombre,
+        nombre: `${user.nombre} ${user.apellido}`,
         comentario,
         replies: [],
         ref: user?.ref,
@@ -327,7 +327,7 @@ async function saveComment ({ body, jwt, isReply = 'false' }) {
       })
         .then((isOwner) => {
           resolve({
-            nombre,
+            nombre: `${user.nombre} ${user.apellido}`,
             comentario,
             replies: [],
             ref: user?.ref,

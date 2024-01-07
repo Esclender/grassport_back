@@ -4,6 +4,7 @@ const { Client } = require('@googlemaps/google-maps-services-js')
 const { getCommentsArray } = require('../utils/canchasUtils')
 const { mongo } = require('../helpers/db')
 const path = require('path')
+const User = require('../models/user')
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
@@ -86,13 +87,17 @@ async function canchasPostedInfo ({ id_cancha }) {
     ]
   )
 
-  const { ref, place_id, ...rest } = cancha[0]
+  const { ref, place_id, ownerEmail, ...rest } = cancha[0]
+  const ownerData = await User.findOne({ email: ownerEmail }).exec()
   const url = await getSignedUlrImg({ route: `canchas/${ref}` })
+  const urlOwner = await getSignedUlrImg({ route: `usuarios/${ownerData.ref}` })
   const comments = await getCommentsArray({ place_id: id_cancha, isPostedCanchas: true })
 
   return {
     ...rest,
+    ownerName: `${ownerData.nombre} ${ownerData.apellido}`,
     photoURL: url,
+    userURL: urlOwner,
     comments,
     place_id
   }
