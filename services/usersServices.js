@@ -11,7 +11,6 @@ const CanchaSchema = require('../models/cancha')
 const { mongo } = require('../helpers/db')
 const { generateToken } = require('../utils/jwt')
 const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
-const saveGoogleUserImg = require('../utils/downloadImgFromUrl')
 const timeAgo = require('../utils/time_ago')
 
 // const { sendCodeEmail } = require('../utils/authCheck')
@@ -305,12 +304,10 @@ async function reportProblem ({ user, file, body }) {
 }
 
 async function saveComment ({ body, jwt, isReply = 'false' }) {
-  const { nombre, email, photoURL, isGoogleCancha } = jwt
+  const { nombre, email, isGoogleCancha } = jwt
   const { comentario, place_id, commentToReply } = body
 
   const user = await userSchema.findOne({ email }).exec()
-
-  user.ref = await saveGoogleUserImg({ urlToRetrieve: photoURL })
 
   const commentObject = await new Promise((resolve, reject) => {
     if (isGoogleCancha) {
