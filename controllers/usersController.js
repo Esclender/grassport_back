@@ -132,11 +132,11 @@ async function getUserDataController (req, res) {
 async function userHistoryController (req, res) {
   try {
     const { jwt } = req
-    const data = await usersServices.getUserHistory({ isCreated: jwt })
+    const {historial} = await usersServices.getUserHistory({ isCreated: jwt })
 
     return res.json({
       exitoso: true,
-      ...data
+      response: [...historial]
     })
   } catch (error) {
     const { message, cause } = error
