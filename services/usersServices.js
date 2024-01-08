@@ -304,7 +304,6 @@ async function reportProblem ({ user, file, body }) {
 }
 
 async function getReportDetails ({ id_reporte }) {
-  console.log(id_reporte)
   const reportDetails = await reportSchema.aggregate(
     [
       {
@@ -439,7 +438,13 @@ async function getNotifications ({
               }
             }
           ],
-          allNotificaciones: []
+          allNotificaciones: [
+            {
+              $sort: {
+                isNuevo: -1
+              }
+            }
+          ]
         }
       }
     ]
