@@ -35,6 +35,7 @@ router.delete('/favoritos/:id_favorite', [isAuth, mustBeAuthenticated], usuarioC
 router.get('/mis-datos/favoritos', [isAuth, mustBeAuthenticated], usuarioControllers.userFavorites)
 
 router.post('/report', [isAuth, mustBeAuthenticated, upload.single('image')], usuarioControllers.reportProblemController)
+router.get('/report/:id_reporte', [isAuth, mustBeAuthenticated], usuarioControllers.reportDetailsController)
 
 router.post('/comment', [isAuth, mustBeAuthenticated, isGoogleCancha, updateNotificationAlertComments], usuarioControllers.postNewComment)
 
