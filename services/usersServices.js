@@ -303,6 +303,37 @@ async function reportProblem ({ user, file, body }) {
   }
 }
 
+async function getReportDetails ({ id_reporte }) {
+  console.log(id_reporte)
+  const reportDetails = await reportSchema.aggregate(
+    [
+      {
+        $match: {
+          _id: new mongo.ObjectId(id_reporte)
+        }
+      },
+      {
+        $addFields: {
+          id: '$_id'
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          __v: 0,
+          ref: 0,
+          email: 0,
+          status: 0
+        }
+      }
+    ]
+  )
+
+  console.log(reportDetails)
+
+  return reportDetails[0]
+}
+
 async function saveComment ({ body, jwt, isReply = 'false' }) {
   const { email, isGoogleCancha } = jwt
   const { comentario, place_id, commentToReply } = body
@@ -449,6 +480,7 @@ module.exports = {
   obtenerFavorites,
   getUserData,
   reportProblem,
+  getReportDetails,
   loginSinGoogle,
   registroUsuario,
   completedRegister,

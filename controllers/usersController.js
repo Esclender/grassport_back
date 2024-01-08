@@ -232,6 +232,27 @@ async function reportProblemController (req, res) {
   }
 }
 
+async function reportDetailsController (req, res) {
+  try {
+    const { id_reporte } = req.params
+    const data = await usersServices.getReportDetails({ id_reporte })
+
+    return res.json({
+      exitoso: true,
+      response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 async function postNewComment (req, res) {
   try {
     const { body, jwt, query } = req
@@ -286,5 +307,6 @@ module.exports = {
   deleteFavoriteController,
   completedRegisterController,
   postNewComment,
-  getUserNotifications
+  getUserNotifications,
+  reportDetailsController
 }

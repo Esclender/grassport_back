@@ -1,4 +1,5 @@
 // const { Schema } = require('moongose')
+
 const db = require('../helpers/db')
 
 const adminSchema = new db.Schema({
@@ -6,7 +7,8 @@ const adminSchema = new db.Schema({
   numero: { type: String },
   email: { type: String, required: true, unique: true },
   apellido: { type: String },
-  ref: { type: String }
+  ref: { type: String },
+  auth: { type: Boolean }
 })
 
 adminSchema.methods = {

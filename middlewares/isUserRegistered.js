@@ -13,7 +13,7 @@ async function isUserRegistered (req, res, next) {
     })
   }
 
-  if (!isCreated.auth) {
+  if (!isCreated?.auth && !isAdmin?.auth) {
     return res.status(400).json({
       exitoso: false,
       message: 'Correo no registrado'
