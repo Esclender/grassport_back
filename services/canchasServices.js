@@ -9,7 +9,7 @@ const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
 async function saveCanchaPostedData ({ body, image, jwt }) {
-  const { location, ...rest } = body
+  const { location, place_id, ...rest } = body
   const { email, nombre } = jwt
 
   const fileName = image == null ? 'profile-ddefault.png' : Date.now() + path.extname(image.originalname)
@@ -30,7 +30,9 @@ async function saveCanchaPostedData ({ body, image, jwt }) {
     ownerEmail: email,
     ownerName: nombre,
     rating: 5,
-    isOpen: false
+    isOpen: false,
+    comments_count: 0,
+    place_id
   })
 
   await saveInMongo.save()
@@ -87,20 +89,25 @@ async function canchasPostedInfo ({ id_cancha }) {
     ]
   )
 
-  const { ref, place_id, ownerEmail, ...rest } = cancha[0]
-  const ownerData = await User.findOne({ email: ownerEmail }).exec()
-  const url = await getSignedUlrImg({ route: `canchas/${ref}` })
-  const urlOwner = await getSignedUlrImg({ route: `usuarios/${ownerData.ref}` })
-  const comments = await getCommentsArray({ place_id: id_cancha, isPostedCanchas: true })
+  if (cancha.length > 0) {
+    const { ref, place_id, ownerEmail, ...rest } = cancha[0]
 
-  return {
-    ...rest,
-    ownerName: `${ownerData.nombre} ${ownerData.apellido}`,
-    photoURL: url,
-    userURL: urlOwner,
-    comments,
-    place_id
+    const ownerData = await User.findOne({ email: ownerEmail }).exec()
+    const url = await getSignedUlrImg({ route: `canchas/${ref}` })
+    const urlOwner = await getSignedUlrImg({ route: `usuarios/${ownerData.ref}` })
+    const comments = await getCommentsArray({ place_id: id_cancha, isPostedCanchas: true })
+
+    return {
+      ...rest,
+      ownerName: `${ownerData.nombre} ${ownerData.apellido}`,
+      photoURL: url,
+      userURL: urlOwner,
+      comments,
+      place_id
+    }
   }
+
+  return {}
 }
 
 module.exports = {

@@ -132,7 +132,7 @@ async function getUserDataController (req, res) {
 async function userHistoryController (req, res) {
   try {
     const { jwt } = req
-    const {historial} = await usersServices.getUserHistory({ isCreated: jwt })
+    const { historial } = await usersServices.getUserHistory({ isCreated: jwt })
 
     return res.json({
       exitoso: true,
@@ -294,6 +294,32 @@ async function getUserNotifications (req, res) {
   }
 }
 
+async function getUserMyPlaceDashboard (req, res) {
+  try {
+    const { jwt } = req
+    const { nombre, photoURL, email } = jwt
+    const data = await usersServices.myPlaceDashboard({ email })
+
+    return res.json({
+      exitoso: true,
+      response: {
+        ...data,
+        nombre,
+        photoURL
+      }
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   loginUserWithGoogleController,
   userDataController,
@@ -308,5 +334,6 @@ module.exports = {
   completedRegisterController,
   postNewComment,
   getUserNotifications,
-  reportDetailsController
+  reportDetailsController,
+  getUserMyPlaceDashboard
 }

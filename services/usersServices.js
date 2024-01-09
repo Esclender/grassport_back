@@ -12,6 +12,7 @@ const { mongo } = require('../helpers/db')
 const { generateToken } = require('../utils/jwt')
 const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
 const timeAgo = require('../utils/time_ago')
+const { getCommentsArray } = require('../utils/canchasUtils')
 
 // const { sendCodeEmail } = require('../utils/authCheck')
 async function loginUserWithGoogle ({ body }) {
@@ -363,6 +364,7 @@ async function saveComment ({ body, jwt, isReply = 'false' }) {
             ref: user?.ref,
             place_id,
             fecha_publicado: Date.now(),
+            posted_place_id: mongo.ObjectId(place_id),
             isOwner: isOwner != null && isOwner != undefined
           })
         })
@@ -477,6 +479,81 @@ async function getNotifications ({
   }
 }
 
+async function myPlaceDashboard ({ email }) {
+  const dataDashboard = await CanchaSchema.aggregate([
+    {
+      $match: {
+        ownerEmail: email
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        canchasArray: {
+          $push: '$$ROOT'
+
+        },
+
+        totalComments: {
+          $sum: '$comments_count'
+        },
+        countCanchas: {
+          $count: {}
+        },
+        averageRating: {
+          $avg: '$rating'
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0, // Exclude _id field
+        canchasArray: {
+          $map: {
+            input: '$canchasArray',
+            as: 'cancha',
+            in: {
+              commentsCount: '$$cancha.comments_count',
+              name: '$$cancha.name',
+              ref: '$$cancha.ref',
+              place_id: '$$cancha._id'
+            }
+          }
+        },
+        totalComments: 1,
+        countCanchas: 1,
+        averageRating: 1
+      }
+    }
+  ])
+
+  const { canchasArray, ...rest } = dataDashboard[0]
+
+  const canchasFotos = await Promise.all(
+    canchasArray.map(async (c) => {
+      const { ref, place_id, ...rest } = c
+      const photoURL = await getSignedUlrImg({
+        route: `canchas/${ref}`
+      })
+
+      const comments = await getCommentsArray({ place_id: String(place_id) })
+
+      console.log(comments, 'COMMENTS')
+
+      return {
+        ...rest,
+        photoURL,
+        comments
+      }
+    })
+  )
+
+  return {
+    ...rest,
+    canchas: canchasFotos
+  }
+}
+
 module.exports = {
   loginUserWithGoogle,
   userData,
@@ -491,5 +568,6 @@ module.exports = {
   completedRegister,
   deleteFavorite,
   saveComment,
-  getNotifications
+  getNotifications,
+  myPlaceDashboard
 }

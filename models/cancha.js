@@ -13,7 +13,8 @@ const canchaSchema = new db.Schema({
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true }
   },
-  ref: { type: String, required: true }
+  ref: { type: String, required: true },
+  comments_count: { type: Number }
 })
 
 canchaSchema.methods = {

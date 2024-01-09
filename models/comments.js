@@ -9,6 +9,7 @@ const commentSchema = new db.Schema({
   replies: { type: Array, required: true },
   isOwner: { type: Boolean, required: true },
   place_id: { type: String, required: true },
+  posted_place_id: { type: db.Types.ObjectId },
   isGoogleAuth: { type: Boolean }
 })
 
