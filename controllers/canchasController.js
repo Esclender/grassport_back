@@ -25,8 +25,6 @@ async function getCanchaInfo (req, res) {
     const { isGoogleCancha } = jwt
     const { id_cancha } = params
 
-    console.log({ isGoogleCancha })
-
     const data = isGoogleCancha
       ? await canchasServices.canchasGoogleInfo({ id_cancha })
       : await canchasServices.canchasPostedInfo({ id_cancha })
@@ -47,7 +45,30 @@ async function getCanchaInfo (req, res) {
   }
 }
 
+async function getUserPostedCanchas (req, res) {
+  try {
+    const { jwt } = req
+
+    const data = await canchasServices.userPostedCanchas({ jwt })
+
+    return res.json({
+      exitoso: true,
+      response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(error)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   postCanchaController,
-  getCanchaInfo
+  getCanchaInfo,
+  getUserPostedCanchas
 }

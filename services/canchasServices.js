@@ -2,6 +2,7 @@ const CanchasSchema = require('../models/cancha')
 const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const { getCommentsArray } = require('../utils/canchasUtils')
+const formatRefIntoUrl = require('../utils/formatRefIntoUrl')
 const { mongo } = require('../helpers/db')
 const path = require('path')
 const User = require('../models/user')
@@ -110,8 +111,39 @@ async function canchasPostedInfo ({ id_cancha }) {
   return {}
 }
 
+async function userPostedCanchas ({ jwt }) {
+  const { email } = jwt
+  const canchasArray = await CanchasSchema.aggregate(
+    [
+      {
+        $match: {
+          ownerEmail: email
+        }
+      },
+      {
+        $addFields: {
+          id: '$_id'
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          __v: 0
+        }
+      }
+    ]
+  )
+
+  const objectResponse = await Promise.all(
+    canchasArray.map(formatRefIntoUrl)
+  )
+
+  return objectResponse
+}
+
 module.exports = {
   saveCanchaPostedData,
   canchasGoogleInfo,
-  canchasPostedInfo
+  canchasPostedInfo,
+  userPostedCanchas
 }

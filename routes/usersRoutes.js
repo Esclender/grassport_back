@@ -49,4 +49,6 @@ router.post('/my-place/postCancha', [isAuth, mustBeAuthenticated, upload.single(
 
 router.get('/my-place/dashboard', [isAuth, mustBeAuthenticated], usuarioControllers.getUserMyPlaceDashboard)
 
+router.get('/my-place/canchas', [isAuth, mustBeAuthenticated], canchaControllers.getUserPostedCanchas)
+
 module.exports = router
