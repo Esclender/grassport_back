@@ -122,7 +122,7 @@ async function userPostedCanchas ({ jwt }) {
       },
       {
         $addFields: {
-          id: '$_id'
+          place_id: '$_id'
         }
       },
       {
