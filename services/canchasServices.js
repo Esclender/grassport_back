@@ -135,7 +135,9 @@ async function userPostedCanchas ({ jwt }) {
   )
 
   const objectResponse = await Promise.all(
-    canchasArray.map(formatRefIntoUrl)
+    canchasArray.map(async (element) => {
+      return await formatRefIntoUrl(element, 'canchas')
+    })
   )
 
   return objectResponse
