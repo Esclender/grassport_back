@@ -45,7 +45,7 @@ router.post('/comment', [isAuth, mustBeAuthenticated, isGoogleCancha, mustBeVali
 router.get('/notifications', [isAuth, mustBeAuthenticated], usuarioControllers.getUserNotifications)
 
 /** *USER PLACE CANCHAS POSTING */
-router.post('/my-place/postCancha', [isAuth, mustBeAuthenticated, upload.single('image')], canchaControllers.postCanchaController)
+router.post('/my-place/canchas', [isAuth, mustBeAuthenticated, upload.single('image')], canchaControllers.postCanchaController)
 
 router.get('/my-place/dashboard', [isAuth, mustBeAuthenticated], usuarioControllers.getUserMyPlaceDashboard)
 
