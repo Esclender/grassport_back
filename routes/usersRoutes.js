@@ -51,6 +51,6 @@ router.get('/my-place/dashboard', [isAuth, mustBeAuthenticated], usuarioControll
 
 router.get('/my-place/canchas', [isAuth, mustBeAuthenticated], canchaControllers.getUserPostedCanchas)
 
-router.put('/my-place/canchas/:id_cancha', [isAuth, mustBeAuthenticated, mustBeValidObjectIdByParam, upload.single('image')], canchaControllers.updateCanchaData)
+router.put('/my-place/canchas/:place_id', [isAuth, mustBeAuthenticated, mustBeValidObjectIdByParam, upload.single('image')], canchaControllers.updateCanchaData)
 
 module.exports = router

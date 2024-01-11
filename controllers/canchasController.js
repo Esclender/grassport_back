@@ -72,6 +72,8 @@ async function updateCanchaData (req, res) {
     const { body, params, file } = req
     const { place_id } = params
 
+    console.log(body)
+
     await canchasServices.updateCanchaPostedData({
       place_id,
       body,

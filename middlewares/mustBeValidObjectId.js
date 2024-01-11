@@ -5,7 +5,7 @@ async function mustBeValidObjectIdByBody (req, res, next) {
   const { isGoogleCancha } = req.jwt
 
   if (!moongose.Types.ObjectId.isValid(place_id) && !isGoogleCancha) {
-    return res.statsu(401).json({
+    return res.status(401).json({
       exitoso: false,
       message: 'Id no valido'
     })
@@ -18,8 +18,10 @@ async function mustBeValidObjectIdByParam (req, res, next) {
   const { place_id } = req.params
   const { isGoogleCancha } = req.jwt
 
+  console.log(place_id)
+
   if (!moongose.Types.ObjectId.isValid(place_id) && !isGoogleCancha) {
-    return res.statsu(401).json({
+    return res.status(401).json({
       exitoso: false,
       message: 'Id no valido'
     })
