@@ -1,11 +1,12 @@
 const CanchasSchema = require('../models/cancha')
-const { uploadImage, getSignedUlrImg } = require('../utils/firebaseStorageUtils')
+const { uploadImage, getSignedUlrImg, deleteImageFirebase } = require('../utils/firebaseStorageUtils')
 const { Client } = require('@googlemaps/google-maps-services-js')
 const { getCommentsArray } = require('../utils/canchasUtils')
 const formatRefIntoUrl = require('../utils/formatRefIntoUrl')
 const { mongo } = require('../helpers/db')
 const path = require('path')
 const User = require('../models/user')
+
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
 
@@ -143,9 +144,42 @@ async function userPostedCanchas ({ jwt }) {
   return objectResponse
 }
 
+async function updateCanchaPostedData ({ place_id, body, image }) {
+  const cancha = await CanchasSchema.findById(mongo.ObjectId(place_id)).exec()
+
+  const ref = await new Promise((resolve, reject) => {
+    if (image) {
+      const fileName = Date.now() + path.extname(image.originalname)
+
+      deleteImageFirebase({
+        imageRoute: `canchas/${cancha.ref}`
+      })
+        .catch((e) => { reject(Error('Error al borrar la imagen')) })
+
+      uploadImage({
+        imageRoute: `canchas/${fileName}`,
+        image
+      }).then(() => {
+        resolve({
+          ref: fileName
+        })
+      })
+        .catch(() => { reject(Error('Error al subir la imagen')) })
+    } else {
+      resolve({})
+    }
+  })
+
+  await CanchasSchema.findByIdAndUpdate(mongo.ObjectId(place_id), {
+    ...body,
+    ...ref
+  })
+}
+
 module.exports = {
   saveCanchaPostedData,
   canchasGoogleInfo,
   canchasPostedInfo,
-  userPostedCanchas
+  userPostedCanchas,
+  updateCanchaPostedData
 }

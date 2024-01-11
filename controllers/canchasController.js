@@ -67,8 +67,35 @@ async function getUserPostedCanchas (req, res) {
   }
 }
 
+async function updateCanchaData (req, res) {
+  try {
+    const { body, params, file } = req
+    const { place_id } = params
+
+    await canchasServices.updateCanchaPostedData({
+      place_id,
+      body,
+      image: file
+    })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(error)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   postCanchaController,
   getCanchaInfo,
-  getUserPostedCanchas
+  getUserPostedCanchas,
+  updateCanchaData
 }
