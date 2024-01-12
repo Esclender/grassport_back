@@ -24,8 +24,8 @@ async function getGeolocation ({ latitude, longitude }) {
 
         resolve({
           location: {
-            lat: latitude,
-            lng: longitude
+            latitude,
+            longitude
           },
           street: adrresses[1].formatted_address,
           locality: adrresses[adrresses.length - 2].formatted_address
@@ -145,8 +145,11 @@ async function findByAddress ({ address, userToken }) {
     return {
       leading: 'place',
       street: formatted_address,
-      locality: address_components[0].short_name,
-      location: geometry.location,
+      name: address_components[0].short_name,
+      location: {
+        latitude: geometry.location.lat,
+        longitude: geometry.location.lng
+      },
       emailUsuario: userToken?.email ?? null
     }
   })
@@ -165,11 +168,29 @@ async function searchCanchasLocations ({ nombre, userToken }) {
     Response.push({
       leading: 'place',
       street: formatted_address,
-      locality: name,
-      location: geometry.location,
+      name,
+      location: {
+        latitude: geometry.location.lat,
+        longitude: geometry.location.lng
+      },
       place_id
     })
   })
+
+  const postedCanchas = await CanchasSchema.aggregate([
+    {
+      $match: {
+        name: { $regex: nombre, $options: 'i' }
+      }
+    },
+    {
+      $addFields: {
+        place_id: '$_id'
+      }
+    }
+  ])
+
+  console.log(postedCanchas)
 
   return Response
 }
