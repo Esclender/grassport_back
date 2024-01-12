@@ -145,7 +145,7 @@ async function findByAddress ({ address, userToken }) {
     return {
       leading: 'place',
       street: formatted_address,
-      name: address_components[0].short_name,
+      locality: address_components[0].short_name,
       location: {
         latitude: geometry.location.lat,
         longitude: geometry.location.lng
