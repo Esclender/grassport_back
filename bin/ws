@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 const { Server } = require('ws')
-const sockServer = new Server({ port: 443 })
+const sockServer = new Server({ port: 4000 })
 
 sockServer.on('connection', ws => {
   console.log('New client connected!')

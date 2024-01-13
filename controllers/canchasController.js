@@ -3,6 +3,8 @@ const canchasServices = require('../services/canchasServices')
 async function postCanchaController (req, res) {
   try {
     const { body, jwt, file } = req
+    console.log(body)
+    console.log(file)
     await canchasServices.saveCanchaPostedData({ body, jwt, image: file })
 
     return res.json({
@@ -10,6 +12,7 @@ async function postCanchaController (req, res) {
     })
   } catch (error) {
     const { message, cause } = error
+    console.log(error)
     return res
       .status(cause?.status ?? 401)
       .json({
