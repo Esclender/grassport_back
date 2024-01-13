@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const { Server } = require('ws')
+const { getNearbyLocations } = require('../services/ubicacionesServices')
 const sockServer = new Server({ port: 4000 })
 
 sockServer.on('connection', ws => {
@@ -8,10 +9,14 @@ sockServer.on('connection', ws => {
   ws.send('connection established')
   ws.on('close', () => console.log('Client has disconnected!'))
   ws.on('message', data => {
-    sockServer.clients.forEach(client => {
-      console.log(`distributing message: ${data}`)
-      client.send(`${data}`)
-    })
+    const { latitude, longitude } = JSON.parse(data)
+    getNearbyLocations({ latitude, longitude })
+      .then((response) => {
+        ws.send(JSON.stringify({
+          exitoso: true,
+          response
+        }))
+      })
   })
   ws.onerror = function () {
     console.log('websocket error')
