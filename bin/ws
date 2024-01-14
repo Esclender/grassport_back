@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const { Server } = require('ws')
+const deleteDuplicates = require('../utils/removeDuplicatesInArray')
 const { getNearbyLocations } = require('../services/ubicacionesServices')
 const sockServer = new Server({ port: 4000 })
 
@@ -9,13 +10,18 @@ sockServer.on('listening', () => {
 })
 
 sockServer.on('connection', ws => {
+  const canchasSaved = []
+
   console.log('New client connected!')
   ws.send('connection established')
   ws.on('close', () => console.log('Client has disconnected!'))
   ws.on('message', data => {
     const { latitude, longitude } = JSON.parse(data)
     getNearbyLocations({ latitude, longitude })
-      .then((response) => {
+      .then((nearbyLocations) => {
+        const response = deleteDuplicates(nearbyLocations, canchasSaved)
+
+        canchasSaved.push(...response)
         ws.send(JSON.stringify({
           exitoso: true,
           response
