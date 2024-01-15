@@ -10,6 +10,7 @@ const { generateToken } = require('../../utils/jwt')
 const getLastMonday = require('../../utils/getLastMonday')
 const convertISOToYYMMDD = require('../../utils/convertISOdates')
 const Cancha = require('../../models/cancha')
+const ingresosSchema = require('../../models/analisisIngresos')
 
 async function acceso ({ body }) {
   return new Promise((resolve, reject) => {
@@ -49,7 +50,6 @@ async function getReports () {
     ]
   )
 
-  // Calculate expiration date (one day from now)
   const expirationDate = new Date()
   expirationDate.setDate(expirationDate.getDate() + 1)
 
@@ -206,11 +206,6 @@ async function getUsersList ({ tops = 10, filterName, filterEmail, filterDate, o
 
 async function getAdminPanel ({ user }) {
   const { email } = user
-  const projectFields = {
-    _id: 0,
-    __v: 0,
-    clave: 0
-  }
 
   const adminsPipeline = [
     { $project: { email: 1 } }
@@ -226,41 +221,22 @@ async function getAdminPanel ({ user }) {
   const reportesCount = await reportSchema.countDocuments()
   const postedCanchasCount = await Cancha.countDocuments()
 
-  const topIngresosPipeline = [
-    {
-      $match: {
-        email: { $nin: emailToExclude },
-        isGoogleAuth: false
+  const today = new Date()
+
+  // Calculate the date 3 months ago
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(today.getMonth() - 3)
+
+  const dataIngresos = await ingresosSchema.aggregate(
+    [
+
+      {
+        $project: {
+          _id: 0,
+          __v: 0
+        }
       }
-    },
-    { $sort: { conteo_ingresos: -1 } },
-    { $limit: 3 },
-    { $project: projectFields }
-  ]
-
-  const topIngresos = await userSchema.aggregate(topIngresosPipeline)
-
-  const topUsersWithImageURLs = await Promise.all(
-    topIngresos.map(async (user) => {
-      const { ref, fecha_creacion, fecha_ultimo_ingreso } = user
-      const bucket = admin.storage().bucket()
-      const destinationFolder = 'usuarios'
-
-      const fileToUpload = bucket.file(`${destinationFolder}/${ref}`)
-
-      const [url] = await fileToUpload.getSignedUrl({
-        action: 'read',
-        expires: expirationDate.toISOString()
-      })
-
-      return {
-        ...user,
-        imageURL: url,
-        fecha_creacion: convertISOToYYMMDD(fecha_creacion),
-        fecha_ultimo_ingreso: convertISOToYYMMDD(fecha_ultimo_ingreso)
-
-      }
-    })
+    ]
   )
 
   const reportesWeekCount = await reportSchema.aggregate(
@@ -308,11 +284,11 @@ async function getAdminPanel ({ user }) {
   })
 
   return {
-    topUsersWithImageURLs,
     reports_week: reportesWeekCount[0]?.totalReports ?? 0,
     usuariosCount,
     reportesCount,
     postedCanchasCount,
+    ingresosLastMonths: dataIngresos,
     admin_info: {
       ...admin_info,
       imageURL: url

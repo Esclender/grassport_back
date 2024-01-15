@@ -21,7 +21,7 @@ const { mustBeValidObjectIdByBody, mustBeValidObjectIdByParam } = require('../mi
 const { isGoogleCancha } = require('../middlewares/isObjectId')
 const { updateNotificationAlertComments } = require('../middlewares/updateNotifications')
 
-router.post('/', [isUserRegistered, isCreated], usuarioControllers.loginUserWithGoogleController)
+router.post('/', [isUserRegistered, isCreated, updateLastIngreso], usuarioControllers.loginUserWithGoogleController)
 router.post('/login', [isUserRegistered, updateLastIngreso], usuarioControllers.loginUserSinGoogleController)
 router.post('/registro', [upload.single('image'), isAlreadyRegistered], usuarioControllers.registerUserController)
 router.post('/registro/completado', usuarioControllers.completedRegisterController)
