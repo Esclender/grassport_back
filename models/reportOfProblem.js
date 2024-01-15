@@ -21,6 +21,6 @@ reportSchema.methods = {
   }
 }
 
-const Report = db.model('reportes-problemas', reportSchema)
+const Report = db.model('reportesProblemas', reportSchema)
 
 module.exports = Report

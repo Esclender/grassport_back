@@ -9,6 +9,7 @@ const userSchema = require('../../models/user')
 const { generateToken } = require('../../utils/jwt')
 const getLastMonday = require('../../utils/getLastMonday')
 const convertISOToYYMMDD = require('../../utils/convertISOdates')
+const Cancha = require('../../models/cancha')
 
 async function acceso ({ body }) {
   return new Promise((resolve, reject) => {
@@ -76,12 +77,16 @@ async function getReports () {
   return reportsWithImageURLs
 }
 
-async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
+async function getUsersList ({ tops = 10, filterName, filterEmail, filterDate, orderBy }) {
   try {
     const matchConditions = {}
+
     if (filterName) {
       matchConditions.nombre_minuscula = { $regex: filterName, $options: 'i' } // Case-insensitive regex search
+    } else if (filterEmail) {
+      matchConditions.email = { $regex: filterEmail, $options: 'i' }
     }
+
     if (filterDate) {
       matchConditions.fecha_creacion = { $gte: new Date(filterDate) }
     }
@@ -117,7 +122,6 @@ async function getUsersList ({ tops = 10, filterName, filterDate, orderBy }) {
       {
         $match: {
           ...matchConditions,
-          email: { $nin: emailToExclude },
           isGoogleAuth: false
         }
       },
@@ -220,6 +224,7 @@ async function getAdminPanel ({ user }) {
 
   const usuariosCount = await userSchema.countDocuments({ isGoogleAuth: false, email: { $nin: emailToExclude } })
   const reportesCount = await reportSchema.countDocuments()
+  const postedCanchasCount = await Cancha.countDocuments()
 
   const topIngresosPipeline = [
     {
@@ -307,11 +312,33 @@ async function getAdminPanel ({ user }) {
     reports_week: reportesWeekCount[0]?.totalReports ?? 0,
     usuariosCount,
     reportesCount,
+    postedCanchasCount,
     admin_info: {
       ...admin_info,
       imageURL: url
     }
   }
+}
+
+async function getCanchasLocations () {
+  const locations = await Cancha.aggregate(
+    [
+      {
+        $addFields: {
+          place_id: '$_id'
+        }
+      },
+      {
+        $project: {
+          location: 1,
+          place_id: 1,
+          _id: 0
+        }
+      }
+    ]
+  )
+
+  return locations
 }
 
 async function updateProblemStatus ({ body, idReport }) {
@@ -328,5 +355,6 @@ module.exports = {
   acceso,
   getUsersList,
   getAdminPanel,
-  updateProblemStatus
+  updateProblemStatus,
+  getCanchasLocations
 }

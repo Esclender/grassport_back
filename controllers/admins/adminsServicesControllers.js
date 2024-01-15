@@ -44,8 +44,8 @@ async function getReportsController (req, res) {
 
 async function getUsersList (req, res) {
   try {
-    const { tops, nombre, orden } = req.query
-    const reports = await adminServices.getUsersList({ tops, filterName: nombre, orderBy: orden })
+    const { tops, nombre, orden, email } = req.query
+    const reports = await adminServices.getUsersList({ tops, filterName: nombre, orderBy: orden, filterEmail: email })
 
     return res.json({
       exitoso: true,
@@ -105,10 +105,33 @@ async function updateReportStatusController (req, res) {
   }
 }
 
+async function getPostedCanchasLocations (req, res) {
+  try {
+    const { id_reporte } = req.params
+    console.log(id_reporte)
+    const data = await adminServices.getCanchasLocations()
+
+    return res.json({
+      exitoso: true,
+      response: data
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   getReportsController,
   accesoController,
   getUsersList,
   getPanelController,
-  updateReportStatusController
+  updateReportStatusController,
+  getPostedCanchasLocations
 }

@@ -18,4 +18,6 @@ router.get('/usuarios', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin
 
 router.get('/panel', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin], adminController.getPanelController)
 
+router.get('/postedLocations', [isAuthenticatedMiddleware, mustBeAuthenticated, isAdmin], adminController.getPostedCanchasLocations)
+
 module.exports = router
