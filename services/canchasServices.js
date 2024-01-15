@@ -6,6 +6,7 @@ const formatRefIntoUrl = require('../utils/formatRefIntoUrl')
 const { mongo } = require('../helpers/db')
 const path = require('path')
 const User = require('../models/user')
+const calculateRating = require('../utils/calculateRating')
 
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
@@ -31,7 +32,8 @@ async function saveCanchaPostedData ({ body, image, jwt }) {
     ref: fileName,
     ownerEmail: email,
     ownerName: nombre,
-    rating: 5,
+    rating: 1,
+    ratingCount: 0,
     isOpen: false,
     comments_count: 0,
     place_id
@@ -176,10 +178,25 @@ async function updateCanchaPostedData ({ place_id, body, image }) {
   })
 }
 
+async function giveRatingCanchaPosted ({ place_id, givenRating }) {
+  const cancha = await CanchasSchema.findById(mongo.ObjectId(place_id))
+
+  console.log(cancha)
+
+  const calculatedRating = calculateRating(givenRating, cancha)
+
+  await CanchasSchema.findByIdAndUpdate(mongo.ObjectId(place_id),
+    {
+      $inc: { ratingCount: 1 },
+      rating: calculatedRating
+    })
+}
+
 module.exports = {
   saveCanchaPostedData,
   canchasGoogleInfo,
   canchasPostedInfo,
   userPostedCanchas,
-  updateCanchaPostedData
+  updateCanchaPostedData,
+  giveRatingCanchaPosted
 }

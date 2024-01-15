@@ -1,4 +1,5 @@
 const usersServices = require('../services/usersServices')
+const canchasServices = require('../services/canchasServices')
 
 async function loginUserWithGoogleController (req, res) {
   try {
@@ -320,6 +321,26 @@ async function getUserMyPlaceDashboard (req, res) {
   }
 }
 
+async function giveRatingController (req, res) {
+  try {
+    const { place_id, rating } = req.body
+    await canchasServices.giveRatingCanchaPosted({ place_id, givenRating: rating })
+
+    return res.json({
+      exitoso: true
+    })
+  } catch (error) {
+    const { message, cause } = error
+    console.log(message)
+    return res
+      .status(cause?.status ?? 401)
+      .json({
+        exitoso: false,
+        error: message
+      })
+  }
+}
+
 module.exports = {
   loginUserWithGoogleController,
   userDataController,
@@ -335,5 +356,6 @@ module.exports = {
   postNewComment,
   getUserNotifications,
   reportDetailsController,
-  getUserMyPlaceDashboard
+  getUserMyPlaceDashboard,
+  giveRatingController
 }

@@ -42,6 +42,8 @@ router.get('/report/:id_reporte', [isAuth, mustBeAuthenticated], usuarioControll
 
 router.post('/comment', [isAuth, mustBeAuthenticated, isGoogleCancha, mustBeValidObjectIdByBody, updateNotificationAlertComments, updateCanchaCommentsCount], usuarioControllers.postNewComment)
 
+router.post('/rating', [isAuth, mustBeAuthenticated, mustBeValidObjectIdByBody], usuarioControllers.giveRatingController)
+
 router.get('/notifications', [isAuth, mustBeAuthenticated], usuarioControllers.getUserNotifications)
 
 /** *USER PLACE CANCHAS POSTING */
