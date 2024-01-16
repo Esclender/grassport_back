@@ -3,7 +3,7 @@
 const db = require('../helpers/db')
 
 const ingresosSchema = new db.Schema({
-  mes: { type: String, required: true },
+  mes: { type: Number, required: true },
   total_ingresos: { type: Number, required: true }
 })
 

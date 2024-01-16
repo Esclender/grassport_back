@@ -1,12 +1,11 @@
 const userSchema = require('../models/user')
 const ingresosSchema = require('../models/analisisIngresos')
 const adminSchema = require('../models/admins')
-const getSpanishMonth = require('../utils/getSpanishMonths')
 
 async function updateLastIngreso (req, res, next) {
   const { email } = req.body
   const actualDate = new Date()
-  const mes = getSpanishMonth(actualDate)
+  const mes = actualDate.getMonth()
   const isMonthRegistered = await ingresosSchema.findOne({ mes }).exec()
 
   const isAdmin = await adminSchema.findOne({ email })
