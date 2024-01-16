@@ -7,6 +7,7 @@ const { mongo } = require('../helpers/db')
 const path = require('path')
 const User = require('../models/user')
 const calculateRating = require('../utils/calculateRating')
+const Interaccion = require('../models/interaccionModel')
 
 const client = new Client({})
 const defaultImg = 'https://ichef.bbci.co.uk/news/640/cpsprodpb/238D/production/_95410190_gettyimages-488144002.jpg'
@@ -42,7 +43,7 @@ async function saveCanchaPostedData ({ body, image, jwt }) {
   await saveInMongo.save()
 }
 
-async function canchasGoogleInfo ({ id_cancha }) {
+async function canchasGoogleInfo ({ id_cancha, email }) {
   const googleCancha = await client.placeDetails({
     params: {
       key: process.env.GOOGLE_MAPS_API_KEY,
@@ -72,7 +73,7 @@ async function canchasGoogleInfo ({ id_cancha }) {
   }
 }
 
-async function canchasPostedInfo ({ id_cancha }) {
+async function canchasPostedInfo ({ id_cancha, email }) {
   const cancha = await CanchasSchema.aggregate(
     [
       {
@@ -99,7 +100,13 @@ async function canchasPostedInfo ({ id_cancha }) {
     const ownerData = await User.findOne({ email: ownerEmail }).exec()
     const url = await getSignedUlrImg({ route: `canchas/${ref}` })
     const urlOwner = await getSignedUlrImg({ route: `usuarios/${ownerData.ref}` })
+
     const comments = await getCommentsArray({ place_id: id_cancha, isPostedCanchas: true })
+
+    const isCanchaRated = await Interaccion.findOne({
+      place_id: String(place_id),
+      email
+    })
 
     return {
       ...rest,
@@ -107,6 +114,7 @@ async function canchasPostedInfo ({ id_cancha }) {
       photoURL: url,
       userURL: urlOwner,
       comments,
+      isRated: isCanchaRated != null,
       place_id
     }
   }
@@ -178,10 +186,8 @@ async function updateCanchaPostedData ({ place_id, body, image }) {
   })
 }
 
-async function giveRatingCanchaPosted ({ place_id, givenRating }) {
+async function giveRatingCanchaPosted ({ place_id, givenRating, email }) {
   const cancha = await CanchasSchema.findById(mongo.ObjectId(place_id))
-
-  console.log(cancha)
 
   const calculatedRating = calculateRating(givenRating, cancha)
 
@@ -190,6 +196,8 @@ async function giveRatingCanchaPosted ({ place_id, givenRating }) {
       $inc: { ratingCount: 1 },
       rating: calculatedRating
     })
+
+  await Interaccion({ place_id, rating: true, email }).save()
 }
 
 module.exports = {

@@ -15,14 +15,20 @@ async function isGoogleCancha (req, res, next) {
 }
 
 async function isDetailedGoogleCancha (req, res, next) {
-  const { params } = req
+  const { params, jwt } = req
   const { id_cancha } = params
-  req.jwt = {}
+  // req.jwt = {}
 
   if (moongose.Types.ObjectId.isValid(id_cancha)) {
-    req.jwt.isGoogleCancha = false
+    req.jwt = {
+      ...jwt,
+      isGoogleCancha: false
+    }
   } else {
-    req.jwt.isGoogleCancha = true
+    req.jwt = {
+      ...jwt,
+      isGoogleCancha: true
+    }
   }
   next()
 }

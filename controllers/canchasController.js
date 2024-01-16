@@ -25,12 +25,14 @@ async function postCanchaController (req, res) {
 async function getCanchaInfo (req, res) {
   try {
     const { jwt, params } = req
-    const { isGoogleCancha } = jwt
+    const { isGoogleCancha, email } = jwt
     const { id_cancha } = params
 
+    console.log(jwt)
+
     const data = isGoogleCancha
-      ? await canchasServices.canchasGoogleInfo({ id_cancha })
-      : await canchasServices.canchasPostedInfo({ id_cancha })
+      ? await canchasServices.canchasGoogleInfo({ id_cancha, email })
+      : await canchasServices.canchasPostedInfo({ id_cancha, email })
 
     return res.json({
       exitoso: true,

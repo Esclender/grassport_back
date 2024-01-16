@@ -13,7 +13,7 @@ router.get('/geocoding/address', ubicacionesController.geocodingByAddress)
 router.get('/geocoding/canchas', ubicacionesController.searchCanchas)
 router.get('/geocoding/nearbyLocations', ubicacionesController.getNearbyLocationController)
 
-router.get('/geocoding/nearbyLocations/:id_cancha', [isDetailedGoogleCancha], canchasController.getCanchaInfo)
+router.get('/geocoding/nearbyLocations/:id_cancha', [isAuthenticatedMiddleware, isDetailedGoogleCancha], canchasController.getCanchaInfo)
 
 router.post('/user-history', [isAuthenticatedMiddleware, mustBeAuthenticated], ubicacionesController.saveHistory)
 

@@ -324,7 +324,8 @@ async function getUserMyPlaceDashboard (req, res) {
 async function giveRatingController (req, res) {
   try {
     const { place_id, rating } = req.body
-    await canchasServices.giveRatingCanchaPosted({ place_id, givenRating: rating })
+    const { email } = req.jwt
+    await canchasServices.giveRatingCanchaPosted({ place_id, givenRating: rating, email })
 
     return res.json({
       exitoso: true
