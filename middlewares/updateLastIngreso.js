@@ -21,10 +21,11 @@ async function updateLastIngreso (req, res, next) {
       await ingresosSchema.findOneAndUpdate({ mes }, {
         $inc: {
           total_ingresos: 1
-        }
+        },
+        fecha: actualDate
       })
     } else {
-      const ingreso = ingresosSchema({ mes, total_ingresos: 1 })
+      const ingreso = ingresosSchema({ mes, total_ingresos: 1, fecha: actualDate })
 
       await ingreso.save()
     }

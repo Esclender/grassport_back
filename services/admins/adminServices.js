@@ -223,13 +223,23 @@ async function getAdminPanel ({ user }) {
 
   const today = new Date()
 
-  // Calculate the date 3 months ago
   const threeMonthsAgo = new Date()
   threeMonthsAgo.setMonth(today.getMonth() - 3)
 
   const dataIngresos = await ingresosSchema.aggregate(
     [
-
+      {
+        $match: {
+          fecha: {
+            $gte: threeMonthsAgo
+          }
+        }
+      },
+      {
+        $sort: {
+          fecha: 1
+        }
+      },
       {
         $project: {
           _id: 0,
